@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -7,128 +7,359 @@ const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'player', phone: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+      .font-bebas { font-family: 'Bebas Neue', cursive !important; }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-12px) rotate(2deg); }
+      }
+      @keyframes shimmer {
+        from { background-position: -200% center; }
+        to { background-position: 200% center; }
+      }
+      @keyframes spin-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+
+      .animate-fadeUp-1 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s forwards; opacity: 0; }
+      .animate-fadeUp-2 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s forwards; opacity: 0; }
+      .animate-fadeUp-3 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s forwards; opacity: 0; }
+      .animate-fadeUp-4 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s forwards; opacity: 0; }
+      .animate-fadeUp-5 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s forwards; opacity: 0; }
+      .animate-fadeUp-6 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.6s forwards; opacity: 0; }
+      .animate-float { animation: float 6s ease-in-out infinite; }
+      .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+      .animate-slideIn { animation: slideIn 0.3s ease forwards; }
+
+      .shimmer-text {
+        background: linear-gradient(90deg, #fff 0%, #4ade80 50%, #fff 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 3s linear infinite;
+      }
+
+      .grid-dots {
+        background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+        background-size: 28px 28px;
+      }
+
+      .input-field {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: white;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        outline: none;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .input-field:focus {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(74,222,128,0.5);
+        box-shadow: 0 0 0 3px rgba(74,222,128,0.08);
+      }
+      .input-field::placeholder { color: rgba(255,255,255,0.2); }
+
+      .input-focused {
+        background: rgba(255,255,255,0.05) !important;
+        border-color: rgba(74,222,128,0.5) !important;
+        box-shadow: 0 0 0 3px rgba(74,222,128,0.08) !important;
+      }
+
+      /* Role selector custom styling */
+      .role-selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .role-option {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 12px 16px;
+        color: rgba(255,255,255,0.4);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .role-option:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.15);
+        color: rgba(255,255,255,0.7);
+      }
+      .role-option.active {
+        background: rgba(74,222,128,0.08);
+        border-color: rgba(74,222,128,0.4);
+        color: #4ade80;
+        box-shadow: 0 0 0 3px rgba(74,222,128,0.06);
+      }
+
+      .btn-register {
+        width: 100%;
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+        color: black;
+        font-weight: 700;
+        font-size: 16px;
+        border-radius: 14px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .btn-register::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+      }
+      .btn-register:hover::before { left: 100%; }
+      .btn-register:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(74,222,128,0.35); }
+      .btn-register:disabled { opacity: 0.6; transform: none; box-shadow: none; }
+
+      .sport-pill {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 100px;
+        padding: 6px 14px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        white-space: nowrap;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-  try {
-    const { data } = await API.post('/auth/register', form);
-    login({
-      _id: data._id,
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      phone: data.phone,
-      avatar: data.avatar || '',
-    }, data.token);
-    if (data.role === 'player') navigate('/player/dashboard');
-    else navigate('/owner/dashboard');
-  } catch (err) {
-    setError(err.response?.data?.message || 'Registration failed');
-  } finally {
-    setLoading(false);
-  }
-};
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const { data } = await API.post('/auth/register', form);
+      login({
+        _id: data._id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        phone: data.phone,
+        avatar: data.avatar || '',
+      }, data.token);
+      if (data.role === 'player') navigate('/player/dashboard');
+      else navigate('/owner/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-4">
-      <div className="bg-gray-800 rounded-2xl p-8 w-full max-w-md shadow-xl">
-        <h2 className="text-3xl font-bold text-green-400 mb-2 text-center">Join PLAYNSPORTS</h2>
-        <p className="text-gray-400 text-center mb-8">Create your account and start playing</p>
+    <div className="min-h-screen bg-[#060606] text-white flex items-center justify-center px-4 py-10 relative overflow-hidden">
+      {/* Background grid dots */}
+      <div className="fixed inset-0 grid-dots pointer-events-none opacity-40" />
 
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
-            {error}
-          </div>
-        )}
+      {/* Spinning rings */}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
+        <div className="absolute inset-0 rounded-full border border-green-400/5 animate-spin-slow" />
+        <div className="absolute inset-12 rounded-full border border-green-400/4" style={{ animation: 'spin-slow 15s linear infinite reverse' }} />
+      </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">Full Name</label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Gaurav Kumar"
-              required
-              className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
+      {/* Glow */}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.04) 0%, transparent 70%)' }}
+      />
 
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="gaurav@test.com"
-              required
-              className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
+      {/* Top line */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[400px] h-[1px] bg-gradient-to-r from-transparent via-green-400/30 to-transparent pointer-events-none" />
 
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">Phone</label>
-            <input
-              type="text"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="9999999999"
-              className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
+      {/* Floating badges */}
+      <div className="absolute top-20 right-20 animate-float" style={{ animationDelay: '0s' }}>
+        <div className="bg-black/40 backdrop-blur-xl border border-white/8 rounded-2xl px-4 py-3 text-sm hidden lg:flex items-center gap-2">
+          <span>🏏</span>
+          <span className="text-gray-400">Cricket · 5 grounds nearby</span>
+        </div>
+      </div>
+      <div className="absolute bottom-32 left-16 animate-float" style={{ animationDelay: '2s' }}>
+        <div className="bg-black/40 backdrop-blur-xl border border-white/8 rounded-2xl px-4 py-3 text-sm hidden lg:flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+          </span>
+          <span className="text-gray-400">Join 24+ players today</span>
+        </div>
+      </div>
 
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">I am a</label>
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              <option value="player">Player</option>
-              <option value="ground_owner">Ground Owner</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-green-500 hover:bg-green-600 disabled:bg-green-800 px-4 py-3 rounded-lg font-semibold transition mt-2"
-          >
-            {loading ? 'Creating account...' : 'Register'}
-          </button>
-        </form>
-
-        <p className="text-gray-400 text-sm text-center mt-6">
-          Already have an account?{' '}
-          <Link to="/login" className="text-green-400 hover:underline">
-            Login here
+      {/* Main card */}
+      <div className="relative w-full max-w-md">
+        {/* Header */}
+        <div className="animate-fadeUp-1 text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2 mb-6">
+            <div className="w-9 h-9 bg-green-400 rounded-xl flex items-center justify-center">
+              <span className="text-black font-black text-sm">P</span>
+            </div>
+            <span className="font-bebas text-2xl tracking-widest text-white">PLAYNSPORTS</span>
           </Link>
-        </p>
+          <h1 className="font-bebas text-5xl tracking-wide shimmer-text mb-2">CREATE ACCOUNT</h1>
+          <p className="text-gray-600 text-sm">Join the community and start playing today</p>
+        </div>
+
+        {/* Form card */}
+        <div className="animate-fadeUp-2 bg-white/2 border border-white/6 rounded-3xl p-8 backdrop-blur-sm">
+          {error && (
+            <div className="animate-slideIn bg-red-400/8 border border-red-400/20 text-red-400 px-4 py-3 rounded-2xl mb-6 text-sm flex items-center gap-2">
+              <span>⚠️</span> {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+            {/* Full Name */}
+            <div className="animate-fadeUp-3">
+              <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                onFocus={() => setFocused('name')}
+                onBlur={() => setFocused('')}
+                placeholder="Gaurav Kumar"
+                required
+                className={`input-field ${focused === 'name' ? 'input-focused' : ''}`}
+              />
+            </div>
+
+            {/* Email */}
+            <div className="animate-fadeUp-3">
+              <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">Email Address</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                onFocus={() => setFocused('email')}
+                onBlur={() => setFocused('')}
+                placeholder="gaurav@gmail.com"
+                required
+                className={`input-field ${focused === 'email' ? 'input-focused' : ''}`}
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="animate-fadeUp-4">
+              <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">Phone Number</label>
+              <input
+                type="text"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                onFocus={() => setFocused('phone')}
+                onBlur={() => setFocused('')}
+                placeholder="9999999999"
+                className={`input-field ${focused === 'phone' ? 'input-focused' : ''}`}
+              />
+            </div>
+
+            {/* Password */}
+            <div className="animate-fadeUp-4">
+              <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                onFocus={() => setFocused('password')}
+                onBlur={() => setFocused('')}
+                placeholder="••••••••"
+                required
+                className={`input-field ${focused === 'password' ? 'input-focused' : ''}`}
+              />
+            </div>
+
+            {/* Role Selector */}
+            <div className="animate-fadeUp-5">
+              <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">I am a</label>
+              <div className="role-selector">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, role: 'player' })}
+                  className={`role-option ${form.role === 'player' ? 'active' : ''}`}
+                >
+                  <span>🏃</span> Player
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, role: 'ground_owner' })}
+                  className={`role-option ${form.role === 'ground_owner' ? 'active' : ''}`}
+                >
+                  <span>🏟️</span> Ground Owner
+                </button>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <div className="animate-fadeUp-6">
+              <button type="submit" disabled={loading} className="btn-register">
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                    Creating account...
+                  </span>
+                ) : 'Create Account →'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer link */}
+        <div className="animate-fadeUp-6 text-center mt-6">
+          <p className="text-gray-600 text-sm">
+            Already have an account?{' '}
+            <Link to="/login" className="text-green-400 hover:text-green-300 font-medium transition-colors">
+              Sign in →
+            </Link>
+          </p>
+        </div>
+
+        {/* Sport pills */}
+        <div className="animate-fadeUp-6 flex flex-wrap justify-center gap-2 mt-8">
+          {['⚽ Football', '🏏 Cricket', '🏀 Basketball', '🎾 Tennis', '🏸 Badminton'].map((s, i) => (
+            <span key={i} className="sport-pill">{s}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
