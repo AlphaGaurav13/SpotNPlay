@@ -2,27 +2,29 @@ import asyncHandler from 'express-async-handler';
 import Player from '../models/Player.js';
 
 const setAvailability = asyncHandler(async (req, res) => {
-  const { sport, isAvailable, coordinates, skillLevel, bio } = req.body;
+  const { sport, skillLevel, bio, latitude, longitude } = req.body;
 
-  let player = await Player.findOne({ user: req.user._id });
+  // ← YE ADD KARO — validation
+  if (!latitude || !longitude) {
+    res.status(400);
+    throw new Error('Location is required. Please allow location access.');
+  }
 
-  if (player) {
-    player.sport = sport;
-    player.isAvailable = isAvailable;
-    player.location.coordinates = coordinates;
-    player.skillLevel = skillLevel || player.skillLevel;
-    player.bio = bio || player.bio;
-    await player.save();
-  } else {
-    player = await Player.create({
+  const player = await Player.findOneAndUpdate(
+    { user: req.user._id },
+    {
       user: req.user._id,
       sport,
-      isAvailable,
-      location: { type: 'Point', coordinates },
       skillLevel,
       bio,
-    });
-  }
+      isAvailable: true,
+      location: {
+        type: 'Point',
+        coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      },
+    },
+    { upsert: true, new: true, runValidators: true }
+  );
 
   res.json(player);
 });
