@@ -482,7 +482,7 @@ const MapSearch = () => {
   <button
     onClick={async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/chat/direct', {
+        const res = await fetch('https://spotnplay-1.onrender.com/api/chat/direct', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

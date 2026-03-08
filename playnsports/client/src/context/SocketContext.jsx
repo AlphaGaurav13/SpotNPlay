@@ -14,9 +14,9 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!user || !token) return;
 
-    socketRef.current = io('http://localhost:5000', {
-      auth: { token },
-      transports: ['websocket'],
+    socketRef.current = io('https://spotnplay-1.onrender.com', {
+        auth: { token },
+        transports: ['websocket'],
     });
 
     const socket = socketRef.current;

@@ -642,7 +642,7 @@ const GroupPage = () => {
                           <button
     onClick={async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/chat/group/${group._id}`, {
+        const res = await fetch(`https://spotnplay-1.onrender.com/api/chat/group/${group._id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         const data = await res.json();
