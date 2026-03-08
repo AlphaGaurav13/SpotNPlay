@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const GroupPage = () => {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ const GroupPage = () => {
   const [creating, setCreating] = useState(false);
   const [inviteUserId, setInviteUserId] = useState('');
   const [selectedGroup, setSelectedGroup] = useState(null);
-
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
     sport: 'cricket',
@@ -637,6 +638,21 @@ const GroupPage = () => {
                               Leave Group
                             </button>
                           )}
+
+                          <button
+    onClick={async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/chat/group/${group._id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const data = await res.json();
+        navigate(`/chat/${data._id}`);
+      } catch {}
+    }}
+    className="btn-secondary text-xs py-2 px-3"
+  >
+    💬 Group Chat
+  </button>
                         </div>
 
                         {selectedGroup === group._id && (

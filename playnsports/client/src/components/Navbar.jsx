@@ -121,6 +121,7 @@ const Navbar = () => {
               <>
                 <NavLink to="/map">Map</NavLink>
                 <NavLink to="/groups">Groups</NavLink>
+                <NavLink to="/chat">Chat</NavLink>
                 {user.role === 'player' && <NavLink to="/player/dashboard">Dashboard</NavLink>}
                 {user.role === 'ground_owner' && <NavLink to="/owner/dashboard">Dashboard</NavLink>}
               </>
@@ -198,6 +199,13 @@ const Navbar = () => {
                   <Link to="/groups" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
                     <span>👥</span> Groups
                   </Link>
+
+                  <Link to="/groups" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
+                    <span>👥</span> Groups
+                  </Link>
+                  <Link to="/chat" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
+                  <span>💬</span> Chat
+                  </Link>  {/* ← ADD */}
                   {user.role === 'player' && (
                     <Link to="/player/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
                       <span>⚡</span> Dashboard
