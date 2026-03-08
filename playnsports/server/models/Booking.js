@@ -16,30 +16,23 @@ const bookingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
-    date: {
-      type: String,
-      required: true,
-    },
-    startTime: {
-      type: String,
-      required: true,
-    },
-    endTime: {
-      type: String,
-      required: true,
-    },
-    totalPrice: {
-      type: Number,
-      required: true,
-    },
+    date: { type: String, required: true },
+    startTime: { type: String, required: true },
+    endTime: { type: String, required: true },
+    totalPrice: { type: Number, required: true },
+    advancePrice: { type: Number, required: true },
+    remainingPrice: { type: Number, required: true },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'cancelled'],
-      default: 'pending',
+      enum: ['advance_pending', 'advance_paid', 'final_pending', 'completed', 'cancelled', 'refunded'],
+      default: 'advance_pending',
+    },
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment',
     },
   },
   { timestamps: true }
 );
 
 export default mongoose.model('Booking', bookingSchema);
-

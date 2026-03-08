@@ -1,36 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import API from '../api/axios';
 import Navbar from '../components/Navbar';
-
-const SPORTS = [
-  { value: 'football', label: 'Football', emoji: '⚽' },
-  { value: 'cricket', label: 'Cricket', emoji: '🏏' },
-  { value: 'basketball', label: 'Basketball', emoji: '🏀' },
-  { value: 'tennis', label: 'Tennis', emoji: '🎾' },
-  { value: 'badminton', label: 'Badminton', emoji: '🏸' },
-  { value: 'volleyball', label: 'Volleyball', emoji: '🏐' },
-];
-
-const SKILLS = [
-  { value: 'beginner', label: 'Beginner', color: 'text-blue-400' },
-  { value: 'intermediate', label: 'Intermediate', color: 'text-yellow-400' },
-  { value: 'advanced', label: 'Advanced', color: 'text-green-400' },
-];
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const PlayerDashboard = () => {
-  const [profile, setProfile] = useState(null);
+  const { user } = useAuth();
+  const [availability, setAvailability] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
   const [form, setForm] = useState({
     sport: 'cricket',
-    isAvailable: true,
-    coordinates: ['', ''],
     skillLevel: 'beginner',
     bio: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [focused, setFocused] = useState('');
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -39,32 +26,35 @@ const PlayerDashboard = () => {
       .font-bebas { font-family: 'Bebas Neue', cursive !important; }
 
       @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(24px); }
         to { opacity: 1; transform: translateY(0); }
       }
       @keyframes shimmer {
         from { background-position: -200% center; }
         to { background-position: 200% center; }
       }
-      @keyframes spin-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-      @keyframes pulse-dot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.85); }
-      }
       @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes cardIn {
+        from { opacity: 0; transform: translateY(16px) scale(0.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes ping {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
       }
 
-      .animate-fadeUp-1 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s forwards; opacity: 0; }
-      .animate-fadeUp-2 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s forwards; opacity: 0; }
-      .animate-fadeUp-3 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.3s forwards; opacity: 0; }
-      .animate-fadeUp-4 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s forwards; opacity: 0; }
-      .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+      .animate-fadeUp-1 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.05s forwards; opacity: 0; }
+      .animate-fadeUp-2 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s forwards; opacity: 0; }
+      .animate-fadeUp-3 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.25s forwards; opacity: 0; }
+      .animate-fadeUp-4 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.35s forwards; opacity: 0; }
+      .animate-cardIn { animation: cardIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
       .animate-slideIn { animation: slideIn 0.3s ease forwards; }
+      .animate-spin { animation: spin 1s linear infinite; }
+      .animate-ping { animation: ping 1.5s ease-out infinite; }
 
       .shimmer-text {
         background: linear-gradient(90deg, #fff 0%, #4ade80 50%, #fff 100%);
@@ -73,164 +63,185 @@ const PlayerDashboard = () => {
         -webkit-text-fill-color: transparent;
         animation: shimmer 3s linear infinite;
       }
+
       .grid-dots {
         background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
         background-size: 28px 28px;
       }
 
-      .card {
+      .glass-card {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 24px;
-        backdrop-filter: blur(8px);
+        padding: 24px;
       }
+
+      .stat-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 20px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .stat-card:hover::before { opacity: 1; }
+      .stat-card:hover { border-color: rgba(74,222,128,0.15); transform: translateY(-3px); }
+      .stat-green::before { background: linear-gradient(90deg, transparent, #4ade80, transparent); }
+      .stat-blue::before { background: linear-gradient(90deg, transparent, #60a5fa, transparent); }
+      .stat-orange::before { background: linear-gradient(90deg, transparent, #fb923c, transparent); }
+      .stat-purple::before { background: linear-gradient(90deg, transparent, #a78bfa, transparent); }
+
+      .tab-btn {
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-family: 'DM Sans', sans-serif;
+        white-space: nowrap;
+      }
+      .tab-active {
+        background: rgba(74,222,128,0.12);
+        color: #4ade80;
+        border: 1px solid rgba(74,222,128,0.2);
+      }
+      .tab-inactive {
+        background: transparent;
+        color: rgba(255,255,255,0.25);
+        border: 1px solid transparent;
+      }
+      .tab-inactive:hover { color: rgba(255,255,255,0.5); }
 
       .input-field {
         width: 100%;
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 13px 16px;
-        color: white;
-        font-size: 15px;
-        transition: all 0.3s ease;
-        outline: none;
-        font-family: 'DM Sans', sans-serif;
-      }
-      .input-field:focus, .input-focused {
-        background: rgba(255,255,255,0.05) !important;
-        border-color: rgba(74,222,128,0.5) !important;
-        box-shadow: 0 0 0 3px rgba(74,222,128,0.08) !important;
-      }
-      .input-field::placeholder { color: rgba(255,255,255,0.2); }
-
-      /* Sport pills selector */
-      .sport-option {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 14px;
-        padding: 10px 12px;
-        color: rgba(255,255,255,0.35);
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        font-family: 'DM Sans', sans-serif;
-      }
-      .sport-option:hover {
-        background: rgba(255,255,255,0.05);
-        color: rgba(255,255,255,0.6);
-        border-color: rgba(255,255,255,0.12);
-      }
-      .sport-option.active {
-        background: rgba(74,222,128,0.08);
-        border-color: rgba(74,222,128,0.4);
-        color: #4ade80;
-      }
-
-      /* Skill toggle */
-      .skill-option {
-        flex: 1;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.07);
         border-radius: 12px;
-        padding: 10px;
-        color: rgba(255,255,255,0.3);
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        text-align: center;
+        padding: 12px 14px;
+        color: white;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.3s ease;
         font-family: 'DM Sans', sans-serif;
       }
-      .skill-option:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); }
-      .skill-option.beginner-active { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.4); color: #60a5fa; }
-      .skill-option.intermediate-active { background: rgba(250,204,21,0.1); border-color: rgba(250,204,21,0.4); color: #facc15; }
-      .skill-option.advanced-active { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.4); color: #4ade80; }
+      .input-field:focus {
+        border-color: rgba(74,222,128,0.4);
+        background: rgba(255,255,255,0.05);
+        box-shadow: 0 0 0 3px rgba(74,222,128,0.06);
+      }
+      .input-field::placeholder { color: rgba(255,255,255,0.15); }
+      .input-field option { background: #111; }
 
-      /* Buttons */
+      .label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 6px;
+        display: block;
+      }
+
       .btn-primary {
         background: linear-gradient(135deg, #4ade80, #22c55e);
-        color: black; font-weight: 700; font-size: 15px;
-        border-radius: 14px; padding: 13px 24px;
-        transition: all 0.3s ease; position: relative; overflow: hidden;
+        color: black;
+        font-weight: 700;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
         font-family: 'DM Sans', sans-serif;
-        white-space: nowrap;
       }
       .btn-primary::before {
-        content: ''; position: absolute; top: 0; left: -100%;
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
         width: 100%; height: 100%;
         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-        transition: left 0.5s ease;
+        transition: left 0.4s ease;
       }
       .btn-primary:hover::before { left: 100%; }
-      .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(74,222,128,0.3); }
-      .btn-primary:disabled { opacity: 0.5; transform: none; box-shadow: none; }
+      .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(74,222,128,0.3); }
+      .btn-primary:disabled { opacity: 0.5; transform: none; }
 
       .btn-danger {
-        background: rgba(248,113,113,0.08);
-        border: 1px solid rgba(248,113,113,0.2);
-        color: #f87171; font-weight: 600; font-size: 15px;
-        border-radius: 14px; padding: 13px 24px;
-        transition: all 0.3s ease;
+        background: rgba(239,68,68,0.08);
+        border: 1px solid rgba(239,68,68,0.15);
+        color: rgba(239,68,68,0.7);
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-size: 13px;
+        transition: all 0.2s ease;
         font-family: 'DM Sans', sans-serif;
-        white-space: nowrap;
       }
-      .btn-danger:hover { background: rgba(248,113,113,0.14); border-color: rgba(248,113,113,0.4); transform: translateY(-1px); }
+      .btn-danger:hover { background: rgba(239,68,68,0.15); color: #ef4444; }
 
-      .btn-location {
-        background: rgba(96,165,250,0.08);
-        border: 1px solid rgba(96,165,250,0.2);
-        color: #60a5fa; font-weight: 600; font-size: 14px;
-        border-radius: 12px; padding: 11px 18px;
-        transition: all 0.3s ease;
-        font-family: 'DM Sans', sans-serif;
-        white-space: nowrap;
-      }
-      .btn-location:hover { background: rgba(96,165,250,0.14); border-color: rgba(96,165,250,0.4); }
-
-      /* Stat cards */
-      .stat-card {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 18px;
-        padding: 20px;
-        text-align: center;
-        transition: all 0.3s ease;
-      }
-      .stat-card:hover {
-        background: rgba(255,255,255,0.04);
-        border-color: rgba(74,222,128,0.15);
-        transform: translateY(-2px);
-      }
-
-      /* Booking card */
       .booking-card {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 16px;
-        padding: 16px 20px;
-        transition: all 0.25s ease;
+        padding: 16px;
+        transition: all 0.3s ease;
       }
-      .booking-card:hover {
-        background: rgba(255,255,255,0.04);
-        border-color: rgba(255,255,255,0.1);
+      .booking-card:hover { border-color: rgba(74,222,128,0.15); }
+
+      .payment-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 16px;
+        transition: all 0.3s ease;
+      }
+      .payment-card:hover { border-color: rgba(74,222,128,0.15); }
+
+      .price-breakdown {
+        background: rgba(74,222,128,0.04);
+        border: 1px solid rgba(74,222,128,0.1);
+        border-radius: 12px;
+        padding: 12px;
       }
 
       .status-badge {
-        font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-        padding: 4px 12px; border-radius: 100px;
-        font-family: 'DM Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 100px;
       }
 
-      .section-label {
-        font-size: 11px; color: rgba(255,255,255,0.25);
-        text-transform: uppercase; letter-spacing: 0.1em;
-        font-family: 'DM Sans', sans-serif;
+      .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(74,222,128,0.1);
+        border: 1px solid rgba(74,222,128,0.2);
+        color: #4ade80;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 100px;
+      }
+
+      .availability-active {
+        background: rgba(74,222,128,0.04);
+        border: 1px solid rgba(74,222,128,0.15);
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .progress-ring {
+        transform: rotate(-90deg);
+        transform-origin: center;
       }
     `;
     document.head.appendChild(style);
@@ -238,289 +249,382 @@ const PlayerDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchProfile();
-    fetchBookings();
+    fetchAll();
   }, []);
 
-  const fetchProfile = async () => {
+  const fetchAll = async () => {
     try {
-      const { data } = await API.get('/players/me');
-      setProfile(data);
-      setForm({
-        sport: data.sport,
-        isAvailable: data.isAvailable,
-        coordinates: data.location.coordinates,
-        skillLevel: data.skillLevel,
-        bio: data.bio,
-      });
-    } catch { setProfile(null); }
+      const [availRes, bookRes, payRes] = await Promise.all([
+        API.get('/players/me').catch(() => ({ data: null })),
+        API.get('/bookings/my').catch(() => ({ data: [] })),
+        API.get('/payments/my').catch(() => ({ data: [] })),
+      ]);
+      setAvailability(availRes.data);
+      setBookings(bookRes.data);
+      setPayments(payRes.data);
+      if (availRes.data) {
+        setForm({
+          sport: availRes.data.sport || 'cricket',
+          skillLevel: availRes.data.skillLevel || 'beginner',
+          bio: availRes.data.bio || '',
+        });
+      }
+    } catch {}
   };
 
-  const fetchBookings = async () => {
-    try {
-      const { data } = await API.get('/bookings/my');
-      setBookings(data);
-    } catch { setBookings([]); }
+  const showMessage = (msg, type = 'success') => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(''), 3000);
   };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleLocation = () => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setForm({ ...form, coordinates: [pos.coords.longitude, pos.coords.latitude] });
-      setMessage('location');
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleGoLive = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
     try {
-      await API.post('/players/availability', form);
-      setMessage('saved');
-      fetchProfile();
+      await new Promise((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej)
+      ).then(async (pos) => {
+        await API.post('/players/availability', {
+          ...form,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+        showMessage('You are now LIVE on the map! 🟢');
+        fetchAll();
+      });
     } catch {
-      setMessage('error');
+      showMessage('Failed to go live', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOffline = async () => {
+  const handleGoOffline = async () => {
     try {
       await API.patch('/players/offline');
-      setMessage('offline');
-      fetchProfile();
+      showMessage('You are now offline');
+      setAvailability(null);
+      fetchAll();
     } catch {
-      setMessage('error');
+      showMessage('Failed', 'error');
     }
   };
 
-  const handleCancelBooking = async (id) => {
-    try {
-      await API.patch(`/bookings/${id}/cancel`);
-      fetchBookings();
-    } catch {
-      setMessage('error');
-    }
+  const getStatusBadge = (status) => {
+    const map = {
+      advance_pending: { label: 'Advance Pending', color: 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/20' },
+      advance_paid: { label: 'Advance Paid ✅', color: 'bg-blue-400/10 text-blue-400 border border-blue-400/20' },
+      completed: { label: 'Completed 🎉', color: 'bg-green-400/10 text-green-400 border border-green-400/20' },
+      refunded: { label: 'Refunded', color: 'bg-gray-400/10 text-gray-400 border border-gray-400/20' },
+      cancelled: { label: 'Cancelled', color: 'bg-red-400/10 text-red-400 border border-red-400/20' },
+    };
+    return map[status] || { label: status, color: 'bg-white/10 text-white' };
   };
 
-  const messageConfig = {
-    saved: { bg: 'bg-green-400/8 border-green-400/20 text-green-400', text: 'Availability updated ✅' },
-    location: { bg: 'bg-blue-400/8 border-blue-400/20 text-blue-400', text: 'Location detected 📍' },
-    offline: { bg: 'bg-red-400/8 border-red-400/20 text-red-400', text: 'You are now offline 🔴' },
-    error: { bg: 'bg-red-400/8 border-red-400/20 text-red-400', text: 'Something went wrong ❌' },
+  const getSportEmoji = (sport) => {
+    const map = { football: '⚽', cricket: '🏏', basketball: '🏀', tennis: '🎾', badminton: '🏸', volleyball: '🏐' };
+    return map[sport] || '🏆';
   };
+
+  const totalSpent = payments.reduce((sum, p) => {
+    const adv = p.advancePayment?.status === 'paid' ? p.advanceAmount : 0;
+    const fin = p.finalPayment?.status === 'paid' ? p.remainingAmount : 0;
+    return sum + adv + fin;
+  }, 0);
+
+  const pendingPayments = payments.filter((p) => p.status === 'advance_paid').length;
+  const completedBookings = bookings.filter((b) => b.status === 'completed').length;
 
   return (
-    <div className="min-h-screen bg-[#060606] text-white relative overflow-hidden" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Background */}
+    <div className="min-h-screen bg-[#060606] text-white" style={{ fontFamily: 'DM Sans, sans-serif' }}>
       <div className="fixed inset-0 grid-dots pointer-events-none opacity-30" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.03) 0%, transparent 70%)' }} />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[500px] h-[1px] bg-gradient-to-r from-transparent via-green-400/20 to-transparent pointer-events-none" />
 
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 py-10">
-
-        {/* Page header */}
-        <div className="animate-fadeUp-1 mb-10">
-          <p className="section-label mb-2">Dashboard</p>
-          <h1 className="font-bebas text-5xl tracking-wide shimmer-text">PLAYER HUB</h1>
+      {message && (
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-slideIn px-5 py-3 rounded-2xl text-sm font-medium flex items-center gap-2 shadow-2xl whitespace-nowrap ${
+          messageType === 'success'
+            ? 'bg-green-400/15 border border-green-400/25 text-green-400'
+            : 'bg-red-400/15 border border-red-400/25 text-red-400'
+        }`}>
+          {messageType === 'success' ? '✅' : '⚠️'} {message}
         </div>
+      )}
 
-        {/* Toast message */}
-        {message && messageConfig[message] && (
-          <div className={`animate-slideIn border px-4 py-3 rounded-2xl mb-6 text-sm flex items-center gap-2 ${messageConfig[message].bg}`}>
-            {messageConfig[message].text}
+      <div className="max-w-5xl mx-auto px-4 py-10">
+
+        {/* Header */}
+        <div className="animate-fadeUp-1 flex items-start justify-between flex-wrap gap-4 mb-8">
+          <div>
+            <p className="text-green-400 text-xs uppercase tracking-[0.3em] mb-1">Player</p>
+            <h1 className="font-bebas text-5xl tracking-wide shimmer-text">
+              {user?.name?.split(' ')[0]}'S DASHBOARD
+            </h1>
+            <p className="text-gray-600 text-sm mt-1">Welcome back — ready to play? ⚽</p>
           </div>
-        )}
-
-        {/* Profile Stats */}
-        {profile && (
-          <div className="animate-fadeUp-2 card p-6 mb-6">
-            <p className="section-label mb-4">My Stats</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="stat-card">
-                <p className="text-2xl mb-1">
-                  {SPORTS.find(s => s.value === profile.sport)?.emoji || '🏅'}
-                </p>
-                <p className="text-xs text-gray-600 mb-1">Sport</p>
-                <p className="text-green-400 font-bold capitalize text-sm">{profile.sport}</p>
-              </div>
-              <div className="stat-card">
-                <div className="flex justify-center mb-1">
-                  <span className={`relative flex h-3 w-3`}>
-                    {profile.isAvailable && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                    )}
-                    <span className={`relative inline-flex rounded-full h-3 w-3 ${profile.isAvailable ? 'bg-green-400' : 'bg-red-400'}`} />
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600 mb-1">Status</p>
-                <p className={`font-bold text-sm ${profile.isAvailable ? 'text-green-400' : 'text-red-400'}`}>
-                  {profile.isAvailable ? 'Available' : 'Offline'}
-                </p>
-              </div>
-              <div className="stat-card">
-                <p className="text-2xl mb-1">🎯</p>
-                <p className="text-xs text-gray-600 mb-1">Skill</p>
-                <p className="text-green-400 font-bold capitalize text-sm">{profile.skillLevel}</p>
-              </div>
-              <div className="stat-card">
-                <p className="text-2xl mb-1">📅</p>
-                <p className="text-xs text-gray-600 mb-1">Bookings</p>
-                <p className="text-green-400 font-bold text-sm">{bookings.length}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Availability form */}
-        <div className="animate-fadeUp-3 card p-6 mb-6">
-          <p className="section-label mb-1">Availability</p>
-          <h2 className="text-lg font-semibold text-white mb-5">Set Your Status</h2>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
-            {/* Sport picker */}
-            <div>
-              <label className="text-xs text-gray-600 uppercase tracking-wider mb-3 block">Sport</label>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                {SPORTS.map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => setForm({ ...form, sport: s.value })}
-                    className={`sport-option ${form.sport === s.value ? 'active' : ''}`}
-                  >
-                    <span className="text-xl">{s.emoji}</span>
-                    <span>{s.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Skill level */}
-            <div>
-              <label className="text-xs text-gray-600 uppercase tracking-wider mb-3 block">Skill Level</label>
-              <div className="flex gap-2">
-                {SKILLS.map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => setForm({ ...form, skillLevel: s.value })}
-                    className={`skill-option ${form.skillLevel === s.value ? `${s.value}-active` : ''}`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Bio */}
-            <div>
-              <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">Bio</label>
-              <input
-                type="text"
-                name="bio"
-                value={form.bio}
-                onChange={handleChange}
-                onFocus={() => setFocused('bio')}
-                onBlur={() => setFocused('')}
-                placeholder="Looking for a cricket match!"
-                className={`input-field ${focused === 'bio' ? 'input-focused' : ''}`}
-              />
-            </div>
-
-            {/* Location */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <button type="button" onClick={handleLocation} className="btn-location">
-                📍 Detect My Location
-              </button>
-              {form.coordinates[0] && (
-                <span className="text-xs text-gray-600 bg-white/3 border border-white/6 px-3 py-2 rounded-xl">
-                  {parseFloat(form.coordinates[1]).toFixed(4)}, {parseFloat(form.coordinates[0]).toFixed(4)}
+          <div className="flex items-center gap-3">
+            {availability ? (
+              <span className="live-badge">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
                 </span>
+                LIVE on Map
+              </span>
+            ) : (
+              <span className="text-xs bg-white/4 border border-white/8 text-gray-500 px-3 py-2 rounded-full">
+                ⚫ Offline
+              </span>
+            )}
+            <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden border border-white/10 hover:border-green-400/30 transition-colors flex-shrink-0">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-green-400/10 flex items-center justify-center text-green-400 font-bold text-sm">
+                  {user?.name?.charAt(0)}
+                </div>
               )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-3 flex-wrap">
-              <button type="submit" disabled={loading} className="btn-primary">
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                    </svg>
-                    Saving...
-                  </span>
-                ) : 'Mark Available ✅'}
-              </button>
-              <button type="button" onClick={handleOffline} className="btn-danger">
-                Go Offline 🔴
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Bookings */}
-        <div className="animate-fadeUp-4 card p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="section-label mb-1">History</p>
-              <h2 className="text-lg font-semibold text-white">My Bookings</h2>
-            </div>
-            <Link
-              to="/map"
-              className="text-sm text-green-400 hover:text-green-300 transition-colors border border-green-400/20 hover:border-green-400/40 px-4 py-2 rounded-xl"
-            >
-              Find Grounds →
             </Link>
           </div>
+        </div>
 
-          {bookings.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-4xl mb-3">🏟️</p>
-              <p className="text-gray-600 text-sm">No bookings yet.</p>
-              <Link to="/map" className="text-green-400 text-sm hover:text-green-300 transition-colors mt-2 inline-block">
-                Book your first ground →
-              </Link>
+        {/* Stats */}
+        <div className="animate-fadeUp-2 grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Total Bookings', value: bookings.length, icon: '📅', color: 'stat-green' },
+            { label: 'Completed', value: completedBookings, icon: '🏆', color: 'stat-blue' },
+            { label: 'Pending Payment', value: pendingPayments, icon: '💳', color: 'stat-orange' },
+            { label: 'Total Spent', value: `₹${totalSpent}`, icon: '💰', color: 'stat-purple' },
+          ].map((stat, i) => (
+            <div key={i} className={`stat-card ${stat.color}`}>
+              <div className="text-2xl mb-2">{stat.icon}</div>
+              <div className="font-bebas text-3xl text-white">{stat.value}</div>
+              <div className="text-gray-600 text-xs uppercase tracking-wider mt-1">{stat.label}</div>
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {bookings.map((booking) => (
-                <div key={booking._id} className="booking-card flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white text-sm truncate">{booking.ground?.name}</p>
-                    <p className="text-gray-600 text-xs mt-0.5">{booking.date} · {booking.startTime} – {booking.endTime}</p>
-                    <p className="text-green-400 text-xs font-semibold mt-1">₹{booking.totalPrice}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className={`status-badge ${
-                      booking.status === 'confirmed' ? 'bg-green-400/10 text-green-400' :
-                      booking.status === 'cancelled' ? 'bg-red-400/10 text-red-400' :
-                      'bg-yellow-400/10 text-yellow-400'
-                    }`}>
-                      {booking.status}
-                    </span>
-                    {booking.status === 'confirmed' && (
-                      <button
-                        onClick={() => handleCancelBooking(booking._id)}
-                        className="text-xs text-red-400/60 hover:text-red-400 transition-colors border border-red-400/10 hover:border-red-400/30 px-3 py-1 rounded-lg"
-                      >
-                        Cancel
-                      </button>
-                    )}
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div className="animate-fadeUp-3">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+            {[
+              { id: 'overview', label: '📍 Availability' },
+              { id: 'bookings', label: `📅 Bookings (${bookings.length})` },
+              { id: 'payments', label: `💳 Payments (${payments.length})` },
+            ].map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`tab-btn ${activeTab === tab.id ? 'tab-active' : 'tab-inactive'}`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* AVAILABILITY TAB */}
+          {activeTab === 'overview' && (
+            <div className="flex flex-col gap-5">
+              {availability && (
+                <div className="availability-active animate-cardIn">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-400/10 border border-green-400/20 rounded-xl flex items-center justify-center text-xl">
+                        {getSportEmoji(availability.sport)}
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold capitalize">{availability.sport} · {availability.skillLevel}</p>
+                        {availability.bio && <p className="text-gray-500 text-xs">{availability.bio}</p>}
+                      </div>
+                    </div>
+                    <button onClick={handleGoOffline} className="btn-danger">
+                      Go Offline
+                    </button>
                   </div>
                 </div>
-              ))}
+              )}
+
+              <div className="glass-card animate-cardIn">
+                <h2 className="font-bebas text-2xl tracking-wide text-white mb-5">
+                  {availability ? 'UPDATE AVAILABILITY' : 'GO LIVE ON MAP'}
+                </h2>
+                <form onSubmit={handleGoLive} className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label">Sport</label>
+                      <select value={form.sport} onChange={(e) => setForm({ ...form, sport: e.target.value })} className="input-field">
+                        <option value="football">⚽ Football</option>
+                        <option value="cricket">🏏 Cricket</option>
+                        <option value="basketball">🏀 Basketball</option>
+                        <option value="tennis">🎾 Tennis</option>
+                        <option value="badminton">🏸 Badminton</option>
+                        <option value="volleyball">🏐 Volleyball</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label">Skill Level</label>
+                      <select value={form.skillLevel} onChange={(e) => setForm({ ...form, skillLevel: e.target.value })} className="input-field">
+                        <option value="beginner">🟡 Beginner</option>
+                        <option value="intermediate">🔵 Intermediate</option>
+                        <option value="advanced">🟢 Advanced</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label">Bio (optional)</label>
+                    <input
+                      type="text"
+                      value={form.bio}
+                      onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                      placeholder="e.g. Looking for a weekend cricket match!"
+                      className="input-field"
+                    />
+                  </div>
+                  <button type="submit" disabled={loading} className="btn-primary flex items-center justify-center gap-2">
+                    {loading ? (
+                      <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg> Getting Location...</>
+                    ) : availability ? '📍 Update My Location' : '🟢 Go Live on Map'}
+                  </button>
+                </form>
+              </div>
+
+              <div className="glass-card animate-cardIn">
+                <h3 className="font-bebas text-xl tracking-wide text-white mb-4">QUICK LINKS</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { to: '/map', icon: '🗺️', label: 'Open Live Map', sub: 'Find players nearby' },
+                    { to: '/groups', icon: '👥', label: 'My Groups', sub: 'Manage sport groups' },
+                    { to: '/profile', icon: '👤', label: 'My Profile', sub: 'Update avatar & info' },
+                  ].map((link, i) => (
+                    <Link key={i} to={link.to} className="bg-white/2 border border-white/6 rounded-2xl p-4 hover:border-green-400/2 hover:bg-green-400/3 transition-all duration-300 group">
+                      <div className="text-2xl mb-2">{link.icon}</div>
+                      <p className="text-white text-sm font-semibold group-hover:text-green-400 transition-colors">{link.label}</p>
+                      <p className="text-gray-600 text-xs mt-0.5">{link.sub}</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* BOOKINGS TAB */}
+          {activeTab === 'bookings' && (
+            <div className="flex flex-col gap-4">
+              {bookings.length === 0 ? (
+                <div className="flex flex-col items-center py-16 gap-3 text-center">
+                  <span className="text-5xl">📅</span>
+                  <p className="text-gray-500">No bookings yet</p>
+                  <Link to="/map" className="btn-primary text-sm px-6 py-2.5">Find a Ground 🗺️</Link>
+                </div>
+              ) : bookings.map((booking, i) => {
+                const badge = getStatusBadge(booking.status);
+                return (
+                  <div key={booking._id} className="booking-card animate-cardIn" style={{ animationDelay: `${i * 0.05}s` }}>
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div>
+                        <p className="text-white font-semibold">{booking.ground?.name || 'Ground'}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">📍 {booking.ground?.address}</p>
+                        <p className="text-gray-400 text-sm mt-2">📅 {booking.date} · 🕐 {booking.startTime} — {booking.endTime}</p>
+                      </div>
+                      <span className={`status-badge ${badge.color}`}>{badge.label}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                      <div className="flex gap-4">
+                        <div>
+                          <p className="text-gray-600 text-xs">Total</p>
+                          <p className="text-white font-semibold text-sm">₹{booking.totalPrice}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs">Advance</p>
+                          <p className="text-green-400 font-semibold text-sm">₹{booking.advancePrice}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 text-xs">Remaining</p>
+                          <p className="text-orange-400 font-semibold text-sm">₹{booking.remainingPrice}</p>
+                        </div>
+                      </div>
+                      <Link to={`/grounds/${booking.ground?._id}`} className="text-green-400 text-xs hover:text-green-300 transition-colors">
+                        View Ground →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* PAYMENTS TAB */}
+          {activeTab === 'payments' && (
+            <div className="flex flex-col gap-4">
+              {pendingPayments > 0 && (
+                <div className="animate-slideIn bg-orange-400/8 border border-orange-400/20 rounded-2xl px-5 py-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    <div>
+                      <p className="text-orange-400 font-semibold text-sm">Final Payment Pending</p>
+                      <p className="text-gray-500 text-xs">You have {pendingPayments} booking(s) with remaining amount due</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {payments.length === 0 ? (
+                <div className="flex flex-col items-center py-16 gap-3 text-center">
+                  <span className="text-5xl">💳</span>
+                  <p className="text-gray-500">No payments yet</p>
+                  <Link to="/map" className="btn-primary text-sm px-6 py-2.5">Book a Ground 🏟️</Link>
+                </div>
+              ) : payments.map((payment, i) => {
+                const badge = getStatusBadge(payment.status);
+                return (
+                  <div key={payment._id} className="payment-card animate-cardIn" style={{ animationDelay: `${i * 0.05}s` }}>
+                    <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+                      <div>
+                        <p className="text-white font-semibold">{payment.ground?.name}</p>
+                        <p className="text-gray-500 text-xs">📍 {payment.ground?.address}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          📅 {payment.booking?.date} · {payment.booking?.startTime} — {payment.booking?.endTime}
+                        </p>
+                      </div>
+                      <span className={`status-badge ${badge.color}`}>{badge.label}</span>
+                    </div>
+
+                    <div className="price-breakdown mb-3">
+                      <div className="flex justify-between text-sm mb-1.5">
+                        <span className="text-gray-500">Total Amount</span>
+                        <span className="text-white font-semibold">₹{payment.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between text-sm mb-1.5">
+                        <span className="text-gray-500">Advance Paid (30%)</span>
+                        <span className={`font-semibold ${payment.advancePayment?.status === 'paid' ? 'text-green-400' : 'text-gray-400'}`}>
+                          {payment.advancePayment?.status === 'paid' ? `✅ ₹${payment.advanceAmount}` : 'Pending'}
+                        </span>
+                      </div>
+                      <div className="w-full h-px bg-white/5 my-1.5" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Remaining (70%)</span>
+                        <span className={`font-semibold ${payment.finalPayment?.status === 'paid' ? 'text-green-400' : 'text-orange-400'}`}>
+                          {payment.finalPayment?.status === 'paid' ? `✅ ₹${payment.remainingAmount}` : `⏳ ₹${payment.remainingAmount} due`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {payment.status === 'advance_paid' && (
+                      <Link to={`/grounds/${payment.ground?._id}`} className="inline-block bg-blue-400/10 border border-blue-400/20 text-blue-400 text-xs font-semibold px-4 py-2 rounded-xl hover:bg-blue-400/20 transition-colors">
+                        💳 Pay Remaining ₹{payment.remainingAmount} →
+                      </Link>
+                    )}
+
+                    {payment.status === 'refunded' && payment.refund?.amount && (
+                      <p className="text-gray-500 text-xs">
+                        🔄 Refunded ₹{payment.refund.amount} · {new Date(payment.refund.processedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
