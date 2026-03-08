@@ -275,13 +275,13 @@ const OTPLogin = () => {
         role,
       });
       login({
-        _id: data._id,
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        phone: data.phone,
-        avatar: data.avatar || '',
-      }, data.token);
+  _id: data._id,
+  name: data.name,
+  email: data.email,
+  role: data.role,
+  phone: data.phone,
+  avatar: data.avatar || '',
+}, data.token);
       if (data.role === 'player') navigate('/player/dashboard');
       else navigate('/owner/dashboard');
     } catch (err) {
