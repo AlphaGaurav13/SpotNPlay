@@ -1,32 +1,36 @@
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.BREVO_SMTP_KEY,
+  },
+});
 
 const sendOTPEmail = async (email, otp) => {
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: `"PlayNSports" <${process.env.EMAIL_USER}>`,
+  await transporter.sendMail({
+    from: `"PLAYNSPORTS" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Your OTP Code",
+    subject: 'Your PLAYNSPORTS OTP',
     html: `
-      <div style="font-family:Arial;padding:20px">
-        <h2>Your OTP Code</h2>
-        <p>Your verification OTP is:</p>
-        <h1 style="letter-spacing:5px">${otp}</h1>
-        <p>This OTP will expire in 5 minutes.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 30px; background: #1a1a2e; border-radius: 12px; color: white;">
+        <h2 style="color: #4ade80; text-align: center;">PLAYNSPORTS</h2>
+        <p style="text-align: center; color: #9ca3af;">Your One Time Password</p>
+        <div style="background: #374151; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+          <h1 style="color: #4ade80; font-size: 40px; letter-spacing: 10px; margin: 0;">${otp}</h1>
+        </div>
+        <p style="color: #9ca3af; text-align: center; font-size: 14px;">Expires in <strong style="color: white;">10 minutes</strong></p>
       </div>
     `,
-  };
-
-  await transporter.sendMail(mailOptions);
+  });
 };
 
 export default sendOTPEmail;
+```
+
+## Render pe env variable add karo:
+```
+BREVO_SMTP_KEY=xsmtpsib-a627c3b855a199f8370f791821551a67b53ea4ee915c9651c85dd6fd67fd7e9f-vyOSuIusiyzILTxa
