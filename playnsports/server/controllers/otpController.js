@@ -24,7 +24,7 @@ const sendOTP = asyncHandler(async (req, res) => {
 });
 
 const verifyOTP = asyncHandler(async (req, res) => {
-  const { email, otp, name, phone, role } = req.body;
+  const { email, otp, name, phone, role, password } = req.body;
 
   const otpRecord = await OTP.findOne({ email, otp });
 
@@ -44,10 +44,11 @@ const verifyOTP = asyncHandler(async (req, res) => {
   let user = await User.findOne({ email });
 
   if (!user) {
+    // Naya user create karo
     user = await User.create({
       name: name || 'Player',
       email,
-      password: Math.random().toString(36),
+      password: password || Math.random().toString(36),
       role: role || 'player',
       phone: phone || '',
     });
@@ -59,7 +60,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     email: user.email,
     role: user.role,
     phone: user.phone,
-    avatar: user.avatar,
+    avatar: user.avatar || '',
     token: generateToken(user._id, user.role),
   });
 });

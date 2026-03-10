@@ -173,8 +173,7 @@ const Login = () => {
         phone: data.phone,
         avatar: data.avatar || '',
       }, data.token);
-      if (data.role === 'player') navigate('/player/dashboard');
-      else navigate('/owner/dashboard');
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {

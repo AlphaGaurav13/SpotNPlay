@@ -130,15 +130,16 @@ const respondToInvitation = asyncHandler(async (req, res) => {
 
 const joinGroup = asyncHandler(async (req, res) => {
   const group = await Group.findById(req.params.id);
+  if (!group) { res.status(404); throw new Error('Group not found'); }
+  if (!group.isOpen) { res.status(400); throw new Error('Group is closed'); }
 
-  if (!group) {
-    res.status(404);
-    throw new Error('Group not found');
-  }
-
-  if (!group.isOpen || new Date() > new Date(group.joiningDeadline)) {
+  // ← DUPLICATE CHECK
+  const alreadyMember = group.members.some(
+    (m) => m.toString() === req.user._id.toString()
+  );
+  if (alreadyMember) {
     res.status(400);
-    throw new Error('Group is closed or deadline passed');
+    throw new Error('You are already a member of this group');
   }
 
   if (group.members.length >= group.maxMembers) {
@@ -146,19 +147,9 @@ const joinGroup = asyncHandler(async (req, res) => {
     throw new Error('Group is full');
   }
 
-  const alreadyMember = group.members.find(
-    (m) => m.toString() === req.user._id.toString()
-  );
-
-  if (alreadyMember) {
-    res.status(400);
-    throw new Error('Already a member');
-  }
-
   group.members.push(req.user._id);
   await group.save();
-
-  res.json({ message: 'Joined group ✅' });
+  res.json({ message: 'Joined group successfully!' });
 });
 
 const leaveGroup = asyncHandler(async (req, res) => {

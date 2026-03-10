@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
+import API from '../api/axios';
+
 const useInView = (threshold = 0.1) => {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -41,10 +43,17 @@ const FloatingCard = ({ style, children }) => (
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [featuresRef, featuresInView] = useInView();
   const [statsRef, statsInView] = useInView();
   const heroRef = useRef(null);
+
+  const [nearbyPlayers, setNearbyPlayers] = useState([]);
+  const [nearbyGrounds, setNearbyGrounds] = useState([]);
+  const [activeTab, setActiveTab] = useState('players');
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState('');
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -55,6 +64,35 @@ const Home = () => {
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Location not supported');
+      setLocationLoading(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const [playersRes, groundsRes] = await Promise.all([
+            API.get(`/players/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
+            API.get(`/grounds/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
+          ]);
+          setNearbyPlayers(playersRes.data || []);
+          setNearbyGrounds(groundsRes.data || []);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      () => {
+        setLocationError('Allow location to see nearby players');
+        setLocationLoading(false);
+      }
+    );
   }, []);
 
   useEffect(() => {
@@ -96,18 +134,6 @@ const Home = () => {
         30% { clip-path: inset(80% 0 5% 0); transform: translate(-2px); }
         40% { clip-path: inset(0 0 100% 0); }
       }
-      @keyframes pulse-dot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.8); }
-      }
-      @keyframes slide-right {
-        from { transform: translateX(-100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-      @keyframes orbit {
-        from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
-        to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
-      }
       @keyframes spin-slow {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
@@ -123,6 +149,10 @@ const Home = () => {
       @keyframes card-in {
         from { opacity: 0; transform: translateY(30px) scale(0.95); }
         to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes shimmer {
+        from { background-position: -200% center; }
+        to { background-position: 200% center; }
       }
 
       .animate-fadeUp { animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -151,16 +181,6 @@ const Home = () => {
         z-index: 1;
       }
 
-      .glitch-text::before {
-        content: attr(data-text);
-        position: absolute;
-        left: 3px;
-        top: 0;
-        color: #4ade80;
-        animation: glitch 4s infinite;
-        clip-path: inset(0 0 100% 0);
-      }
-
       .noise {
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
       }
@@ -181,6 +201,14 @@ const Home = () => {
       @keyframes gradientShift {
         from { background-position: 0% center; }
         to { background-position: 200% center; }
+      }
+
+      .shimmer-text {
+        background: linear-gradient(90deg, #fff 0%, #4ade80 50%, #fff 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 3s linear infinite;
       }
 
       .glow-green { box-shadow: 0 0 40px rgba(74, 222, 128, 0.3); }
@@ -248,6 +276,21 @@ const Home = () => {
         transform: translateY(-6px);
         box-shadow: 0 20px 60px rgba(0,0,0,0.4);
       }
+
+      .nearby-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 20px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+      .nearby-card:hover {
+        border-color: rgba(74,222,128,0.2);
+        background: rgba(255,255,255,0.04);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -262,36 +305,34 @@ const Home = () => {
     card.style.setProperty('--y', `${y}%`);
   };
 
+  const skillColor = (level) => {
+    if (level === 'advanced') return { bg: 'rgba(74,222,128,0.1)', color: '#4ade80', border: 'rgba(74,222,128,0.2)' };
+    if (level === 'intermediate') return { bg: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: 'rgba(59,130,246,0.2)' };
+    return { bg: 'rgba(156,163,175,0.1)', color: '#9ca3af', border: 'rgba(156,163,175,0.2)' };
+  };
+
   return (
     <div className="min-h-screen bg-[#060606] text-white overflow-x-hidden">
-        <Navbar />   
+      <Navbar />
       <div className="scanline" />
-
       <div className="fixed inset-0 grid-dots pointer-events-none opacity-40" />
       <div className="fixed inset-0 noise pointer-events-none" />
-
       <div
         className="fixed inset-0 pointer-events-none transition-transform duration-75"
-        style={{
-          background: `radial-gradient(ellipse 600px 600px at ${50 + mousePos.x}% ${30 + mousePos.y}%, rgba(74,222,128,0.06), transparent)`,
-        }}
+        style={{ background: `radial-gradient(ellipse 600px 600px at ${50 + mousePos.x}% ${30 + mousePos.y}%, rgba(74,222,128,0.06), transparent)` }}
       />
-
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[1px] bg-gradient-to-r from-transparent via-green-400/40 to-transparent pointer-events-none" />
 
       <div className="relative pt-8">
+        {/* Hero Section */}
         <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-4 overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none">
             <div className="absolute inset-0 rounded-full border border-green-400/5 animate-spin-slow" />
             <div className="absolute inset-8 rounded-full border border-green-400/5" style={{ animation: 'spin-slow 15s linear infinite reverse' }} />
             <div className="absolute inset-16 rounded-full border border-green-400/8" style={{ animation: 'spin-slow 10s linear infinite' }} />
           </div>
-
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none"
-            style={{
-              background: 'radial-gradient(circle, rgba(74,222,128,0.04) 0%, transparent 70%)',
-            }}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.04) 0%, transparent 70%)' }}
           />
 
           <FloatingCard style={{ top: '20%', left: '8%', animation: 'float1 7s ease-in-out infinite' }}>
@@ -301,12 +342,10 @@ const Home = () => {
             </span>
             <span className="text-gray-300">Rahul is available nearby</span>
           </FloatingCard>
-
           <FloatingCard style={{ top: '30%', right: '6%', animation: 'float2 9s ease-in-out infinite' }}>
             <span>🏏</span>
             <span className="text-gray-300">Cricket · 2.3km away</span>
           </FloatingCard>
-
           <FloatingCard style={{ bottom: '28%', left: '5%', animation: 'float3 6s ease-in-out infinite' }}>
             <span>🏟️</span>
             <div>
@@ -314,7 +353,6 @@ const Home = () => {
               <div className="text-green-400 text-xs">Slot available — ₹500/hr</div>
             </div>
           </FloatingCard>
-
           <FloatingCard style={{ bottom: '25%', right: '7%', animation: 'float1 8s ease-in-out 1s infinite' }}>
             <span>👥</span>
             <span className="text-gray-300">Sunday Gang · 4/11 joined</span>
@@ -328,17 +366,14 @@ const Home = () => {
               </span>
               Live players active near you right now
             </div>
-
             <div className="overflow-hidden mb-2">
-              <h1
-                className="font-bebas animate-fadeUp-1 relative"
+              <h1 className="font-bebas animate-fadeUp-1 relative"
                 style={{ fontSize: 'clamp(5rem, 18vw, 13rem)', lineHeight: 0.9, letterSpacing: '0.05em' }}
                 data-text="PLAYNSPORTS"
               >
                 <span className="text-gradient">PLAYNSPORTS</span>
               </h1>
             </div>
-
             <div className="animate-fadeUp-2 mt-6 mb-10">
               <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
                 Find players near you, book premium grounds, and never miss a game again.
@@ -346,48 +381,32 @@ const Home = () => {
                 <span className="text-white font-medium">Your sports community — live on the map.</span>
               </p>
             </div>
-
             <div className="animate-fadeUp-3 flex flex-wrap gap-4 justify-center">
               {user ? (
                 <>
-                  <Link to="/map" className="btn-primary">
-                    Open Live Map 🗺️
-                  </Link>
-                  <Link to={user.role === 'player' ? '/player/dashboard' : '/owner/dashboard'} className="btn-secondary">
-                    My Dashboard →
-                  </Link>
+                  <Link to="/map" className="btn-primary">Open Live Map 🗺️</Link>
+                  <Link to={user.role === 'player' ? '/player/dashboard' : '/owner/dashboard'} className="btn-secondary">My Dashboard →</Link>
                 </>
               ) : (
                 <>
-                  <Link to="/register" className="btn-primary">
-                    Get Started — Free 🚀
-                  </Link>
-                  <Link to="/otp-login" className="btn-secondary">
-                    Login with OTP 📧
-                  </Link>
+                  <Link to="/register" className="btn-primary">Get Started — Free 🚀</Link>
+                  <Link to="/otp-login" className="btn-secondary">Login with OTP 📧</Link>
                 </>
               )}
             </div>
-
             <div ref={statsRef} className="animate-fadeUp-4 flex justify-center gap-12 mt-16">
               <div className="text-center">
-                <div className="font-bebas text-4xl text-green-400">
-                  <AnimatedCounter target={500} suffix="+" />
-                </div>
+                <div className="font-bebas text-4xl text-green-400"><AnimatedCounter target={500} suffix="+" /></div>
                 <div className="text-xs text-gray-600 uppercase tracking-widest mt-1">Players</div>
               </div>
               <div className="w-px bg-white/8" />
               <div className="text-center">
-                <div className="font-bebas text-4xl text-green-400">
-                  <AnimatedCounter target={50} suffix="+" />
-                </div>
+                <div className="font-bebas text-4xl text-green-400"><AnimatedCounter target={50} suffix="+" /></div>
                 <div className="text-xs text-gray-600 uppercase tracking-widest mt-1">Grounds</div>
               </div>
               <div className="w-px bg-white/8" />
               <div className="text-center">
-                <div className="font-bebas text-4xl text-green-400">
-                  <AnimatedCounter target={6} />
-                </div>
+                <div className="font-bebas text-4xl text-green-400"><AnimatedCounter target={6} /></div>
                 <div className="text-xs text-gray-600 uppercase tracking-widest mt-1">Sports</div>
               </div>
             </div>
@@ -399,6 +418,7 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Marquee */}
         <div className="relative py-6 overflow-hidden border-y border-white/5">
           <div className="flex animate-marquee whitespace-nowrap">
             {['FOOTBALL', 'CRICKET', 'BASKETBALL', 'TENNIS', 'BADMINTON', 'VOLLEYBALL',
@@ -410,42 +430,180 @@ const Home = () => {
           </div>
         </div>
 
-        <section className="py-28 px-4" ref={featuresRef}>
+        {/* Nearby Players & Grounds Section */}
+        <section className="py-24 px-4" ref={featuresRef}>
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-20">
-              <p className="text-green-400 text-xs uppercase tracking-[0.3em] mb-4">How It Works</p>
-              <h2 className="font-bebas text-5xl md:text-7xl text-white tracking-wide">
-                THREE SIMPLE STEPS
+
+            {/* Header */}
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 bg-green-400/10 border border-green-400/20 rounded-full px-4 py-1.5 mb-4">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+                </span>
+                <span className="text-green-400 text-xs font-semibold uppercase tracking-wider">Live Near You</span>
+              </div>
+              <h2 className="font-bebas text-5xl md:text-7xl tracking-wide text-white mb-3">
+                NEARBY <span className="shimmer-text">RIGHT NOW</span>
               </h2>
-              <div className="w-16 h-px bg-green-400/40 mx-auto mt-6" />
+              <p className="text-gray-600 text-sm">Players and grounds within 5km of your location</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { icon: '📍', title: 'Mark Yourself Available', desc: 'Drop your pin, pick your sport and skill level. Go live and appear on the map for nearby players to find you instantly.', num: '01' },
-                { icon: '🗺️', title: 'Discover & Connect', desc: 'Browse the live map for available players and bookable grounds. Filter by sport, radius and skill level.', num: '02' },
-                { icon: '🏆', title: 'Play & Win', desc: 'Create groups, send invitations, book premium grounds and play your favourite sport — anytime, anywhere.', num: '03' },
-              ].map((f, i) => (
-                <div
-                  key={i}
-                  className={`feature-card ${featuresInView ? 'card-visible' : 'card-hidden'}`}
-                  style={{ animationDelay: `${i * 0.15}s` }}
-                  onMouseMove={handleCardMouseMove}
+            {/* Tabs */}
+            <div className="flex justify-center mb-8">
+              <div className="flex gap-1 p-1 bg-white/3 border border-white/6 rounded-2xl">
+                <button
+                  onClick={() => setActiveTab('players')}
+                  className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={activeTab === 'players' ? {
+                    background: 'rgba(74,222,128,0.15)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)',
+                  } : { color: 'rgba(255,255,255,0.3)' }}
                 >
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="w-14 h-14 bg-green-400/10 border border-green-400/20 rounded-2xl flex items-center justify-center text-2xl">
-                      {f.icon}
-                    </div>
-                    <span className="font-bebas text-5xl text-white/5">{f.num}</span>
-                  </div>
-                  <h3 className="text-white font-bold text-lg mb-3">{f.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
+                  ⚽ Players ({nearbyPlayers.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('grounds')}
+                  className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={activeTab === 'grounds' ? {
+                    background: 'rgba(74,222,128,0.15)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)',
+                  } : { color: 'rgba(255,255,255,0.3)' }}
+                >
+                  🏟️ Grounds ({nearbyGrounds.length})
+                </button>
+              </div>
             </div>
+
+            {/* Content */}
+            {locationLoading ? (
+              <div className="text-center py-16">
+                <div className="w-12 h-12 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-gray-600 text-sm">Finding nearby {activeTab}...</p>
+              </div>
+            ) : locationError ? (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-white/3 border border-white/8 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📍</div>
+                <p className="text-gray-500 text-sm mb-4">{locationError}</p>
+                <button onClick={() => navigate('/map')} className="bg-green-400/10 border border-green-400/20 text-green-400 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-400/20 transition-all">
+                  Open Map →
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Players Tab */}
+                {activeTab === 'players' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {nearbyPlayers.length === 0 ? (
+                      <div className="col-span-3 text-center py-16">
+                        <div className="text-4xl mb-3">🏃</div>
+                        <p className="text-gray-600 text-sm">No players available nearby right now</p>
+                        <button onClick={() => navigate('/map')} className="mt-4 bg-green-400/10 border border-green-400/20 text-green-400 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-400/20 transition-all">
+                          Search on Map →
+                        </button>
+                      </div>
+                    ) : (
+                      nearbyPlayers.slice(0, 6).map((player, i) => (
+                        <div
+                          key={player._id}
+                          className={`nearby-card ${featuresInView ? 'card-visible' : 'card-hidden'}`}
+                          style={{ animationDelay: `${i * 0.1}s` }}
+                          onClick={() => navigate('/map')}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            {player.user?.avatar ? (
+                              <img src={player.user.avatar} className="w-10 h-10 rounded-xl object-cover" alt="" />
+                            ) : (
+                              <div className="w-10 h-10 bg-green-400/15 border border-green-400/20 rounded-xl flex items-center justify-center font-bold text-green-400">
+                                {player.user?.name?.[0] || '?'}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-semibold text-sm truncate">{player.user?.name || 'Player'}</p>
+                              <p className="text-gray-600 text-xs">📍 Nearby</p>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-400" />
+                              </span>
+                              <span className="text-green-400 text-xs">Live</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            <span className="bg-white/5 border border-white/8 text-gray-400 text-xs px-2.5 py-1 rounded-lg">
+                              {player.sport || 'Sport'}
+                            </span>
+                            <span className="text-xs px-2.5 py-1 rounded-lg font-semibold capitalize"
+                              style={{
+                                background: skillColor(player.skillLevel).bg,
+                                color: skillColor(player.skillLevel).color,
+                                border: `1px solid ${skillColor(player.skillLevel).border}`,
+                              }}
+                            >
+                              {player.skillLevel || 'Beginner'}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Grounds Tab */}
+                {activeTab === 'grounds' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {nearbyGrounds.length === 0 ? (
+                      <div className="col-span-3 text-center py-16">
+                        <div className="text-4xl mb-3">🏟️</div>
+                        <p className="text-gray-600 text-sm">No grounds available nearby</p>
+                        <button onClick={() => navigate('/map')} className="mt-4 bg-green-400/10 border border-green-400/20 text-green-400 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-400/20 transition-all">
+                          Search on Map →
+                        </button>
+                      </div>
+                    ) : (
+                      nearbyGrounds.slice(0, 6).map((ground, i) => (
+                        <div
+                          key={ground._id}
+                          className={`nearby-card ${featuresInView ? 'card-visible' : 'card-hidden'}`}
+                          style={{ animationDelay: `${i * 0.1}s` }}
+                          onClick={() => navigate(`/grounds/${ground._id}`)}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            {ground.images?.[0] ? (
+                              <img src={ground.images[0]} className="w-10 h-10 rounded-xl object-cover" alt="" />
+                            ) : (
+                              <div className="w-10 h-10 bg-green-400/15 border border-green-400/20 rounded-xl flex items-center justify-center text-xl">🏟️</div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-semibold text-sm truncate">{ground.name}</p>
+                              <p className="text-gray-600 text-xs truncate">📍 {ground.address || 'Nearby'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="bg-white/5 border border-white/8 text-gray-400 text-xs px-2.5 py-1 rounded-lg">{ground.sport}</span>
+                            <span className="text-green-400 text-sm font-bold">₹{ground.pricePerHour}/hr</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {(nearbyPlayers.length > 0 || nearbyGrounds.length > 0) && (
+                  <div className="text-center mt-8">
+                    <button
+                      onClick={() => navigate('/map')}
+                      className="inline-flex items-center gap-2 bg-green-400/10 border border-green-400/20 text-green-400 px-8 py-3 rounded-xl font-semibold hover:bg-green-400/20 transition-all hover:-translate-y-0.5"
+                    >
+                      View All on Map 🗺️
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </section>
 
+        {/* Sports Grid */}
         <section className="py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <p className="text-gray-700 text-xs uppercase tracking-[0.3em] text-center mb-10">Supported Sports</p>
@@ -458,11 +616,7 @@ const Home = () => {
                 { emoji: '🏸', name: 'Badminton' },
                 { emoji: '🏐', name: 'Volleyball' },
               ].map((s, i) => (
-                <div
-                  key={i}
-                  className="group flex flex-col items-center gap-3 bg-white/2 border border-white/5 rounded-2xl p-5 hover:border-green-400/30 hover:bg-green-400/5 transition-all duration-300 cursor-pointer"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
+                <div key={i} className="group flex flex-col items-center gap-3 bg-white/2 border border-white/5 rounded-2xl p-5 hover:border-green-400/30 hover:bg-green-400/5 transition-all duration-300 cursor-pointer">
                   <span className="text-3xl group-hover:scale-110 transition-transform duration-300">{s.emoji}</span>
                   <span className="text-xs text-gray-600 group-hover:text-green-400 transition-colors uppercase tracking-wider">{s.name}</span>
                 </div>
@@ -471,14 +625,13 @@ const Home = () => {
           </div>
         </section>
 
+        {/* CTA */}
         {!user && (
           <section className="py-28 px-4">
             <div className="max-w-3xl mx-auto text-center">
               <div className="relative inline-block mb-8">
                 <div className="absolute inset-0 rounded-full bg-green-400/10 animate-ping-slow" />
-                <div className="relative w-16 h-16 bg-green-400/15 border border-green-400/30 rounded-full flex items-center justify-center text-2xl">
-                  🏆
-                </div>
+                <div className="relative w-16 h-16 bg-green-400/15 border border-green-400/30 rounded-full flex items-center justify-center text-2xl">🏆</div>
               </div>
               <h2 className="font-bebas text-5xl md:text-8xl text-white tracking-wide mb-6">
                 READY TO <span className="text-green-400">PLAY?</span>
@@ -494,6 +647,7 @@ const Home = () => {
           </section>
         )}
 
+        {/* Footer */}
         <footer className="border-t border-white/5 py-10 px-4">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
