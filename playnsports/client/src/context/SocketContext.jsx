@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { SOCKET_URL } from '../config';
 
 const SocketContext = createContext();
 
@@ -14,7 +15,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!user || !token) return;
 
-    socketRef.current = io('https://spotnplay-1.onrender.com', {
+    socketRef.current = io(SOCKET_URL, {
         auth: { token },
         transports: ['websocket'],
     });

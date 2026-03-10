@@ -482,17 +482,10 @@ const MapSearch = () => {
   <button
     onClick={async () => {
       try {
-        const res = await fetch('https://spotnplay-1.onrender.com/api/chat/direct', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ userId: player.user._id }),
-        });
-        const data = await res.json();
+        const { data } = await API.post('/chat/direct', { userId: player.user._id });
         navigate(`/chat/${data._id}`);
-      } catch {
+      } catch (err) {
+        console.error(err);
         alert('Failed to open chat');
       }
     }}

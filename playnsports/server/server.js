@@ -21,20 +21,34 @@ connectDB();
 const app = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = [
+  'https://playnsports-app.vercel.app',
+  'http://localhost:5173',
+];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   },
+  transports: ['websocket', 'polling'],
 });
 
 socketHandler(io);
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
+
 app.use(express.json());
 
 app.get('/', (req, res) => {

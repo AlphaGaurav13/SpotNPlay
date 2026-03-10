@@ -642,12 +642,11 @@ const GroupPage = () => {
                           <button
     onClick={async () => {
       try {
-        const res = await fetch(`https://spotnplay-1.onrender.com/api/chat/group/${group._id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        const data = await res.json();
+        const { data } = await API.get(`/chat/group/${group._id}`);
         navigate(`/chat/${data._id}`);
-      } catch {}
+      } catch (err) {
+        console.error(err);
+      }
     }}
     className="btn-secondary text-xs py-2 px-3"
   >
