@@ -109,7 +109,7 @@ const Navbar = () => {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-green-400 rounded-lg flex items-center justify-center group-hover:bg-green-300 transition-colors duration-200">
-              <span className="text-black text-sm font-black">P</span>
+              <span className="text-black text-sm font-black">S</span>
             </div>
             <span className=" text-xl tracking-widest text-white group-hover:text-green-400 transition-colors duration-200">
               spotNplay

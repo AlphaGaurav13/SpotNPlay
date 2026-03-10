@@ -227,9 +227,9 @@ const Login = () => {
         <div className="animate-fadeUp-1 text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             <div className="w-9 h-9 bg-green-400 rounded-xl flex items-center justify-center">
-              <span className="text-black font-black text-sm">P</span>
+              <span className="text-black font-black text-sm">S</span>
             </div>
-            <span className="font-bebas text-2xl tracking-widest text-white">PLAYNSPORTS</span>
+            <span className="bold text-2xl tracking-widest text-white">spotNplay</span>
           </Link>
           <h1 className="font-bebas text-5xl tracking-wide shimmer-text mb-2">WELCOME BACK</h1>
           <p className="text-gray-600 text-sm">Sign in to find players and book grounds</p>
