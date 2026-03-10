@@ -1,21 +1,12 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,        // ← 465 SSL
-  secure: true,     // ← true for 465
-  family: 4,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendOTPEmail = async (email, otp) => {
-  await transporter.sendMail({
-    from: `"PLAYNSPORTS" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from: 'PLAYNSPORTS <onboarding@resend.dev>',
     to: email,
     subject: 'Your PLAYNSPORTS OTP',
     html: `
@@ -32,3 +23,4 @@ const sendOTPEmail = async (email, otp) => {
 };
 
 export default sendOTPEmail;
+
