@@ -111,8 +111,8 @@ const Navbar = () => {
             <div className="w-8 h-8 bg-green-400 rounded-lg flex items-center justify-center group-hover:bg-green-300 transition-colors duration-200">
               <span className="text-black text-sm font-black">P</span>
             </div>
-            <span className="font-bebas text-xl tracking-widest text-white group-hover:text-green-400 transition-colors duration-200">
-              PLAYNSPORTS
+            <span className=" text-xl tracking-widest text-white group-hover:text-green-400 transition-colors duration-200">
+              spotNplay
             </span>
           </Link>
 

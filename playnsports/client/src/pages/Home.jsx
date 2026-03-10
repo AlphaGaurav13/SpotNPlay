@@ -374,10 +374,10 @@ const Home = () => {
             </div>
             <div className="overflow-hidden mb-2">
               <h1 className="font-bebas animate-fadeUp-1 relative"
-                style={{ fontSize: 'clamp(5rem, 18vw, 13rem)', lineHeight: 0.9, letterSpacing: '0.05em' }}
+                style={{ fontSize: 'clamp(4rem, 15vw, 10rem)', lineHeight: 0.9, letterSpacing: '0.05em' }}
                 data-text="PLAYNSPORTS"
               >
-                <span className="text-gradient">PLAYNSPORTS</span>
+                <span className="text-gradient">spotNplay</span>
               </h1>
             </div>
             <div className="animate-fadeUp-2 mt-6 mb-10">
@@ -658,7 +658,7 @@ const Home = () => {
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-green-400 rounded-lg flex items-center justify-center">
-                <span className="text-black text-sm font-black">P</span>
+                <span className="text-black text-sm font-black">S</span>
               </div>
               <span className="font-bebas text-xl tracking-widest text-white">PLAYNSPORTS</span>
             </div>
