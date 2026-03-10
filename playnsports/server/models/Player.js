@@ -9,7 +9,7 @@ const playerSchema = new mongoose.Schema(
     },
     sport: {
       type: String,
-      enum: ['football', 'cricket', 'basketball', 'tennis', 'badminton', 'volleyball'],
+      enum: ['football', 'cricket', 'basketball', 'tennis', 'badminton', 'volleyball', 'Boxing'],
       required: true,
     },
     isAvailable: {
