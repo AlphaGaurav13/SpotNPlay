@@ -23,10 +23,11 @@ const app = express();
 const httpServer = createServer(app);
 
 // allowlist for CORS; can be overridden with ALLOWED_ORIGINS env var (comma‑separated)
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 
-  'https://playnsports-app.vercel.app,http://localhost:5173,http://localhost:5174,http://localhost:5175')
-  .split(',')
-  .map((u) => u.trim());
+const allowedOrigins = [
+  'https://playnsports-app.vercel.app',
+  'https://playnsports-28d3yaxnw-gauravs-projects-4cd46d11.vercel.app',
+  'http://localhost:5173',
+];
 
 const io = new Server(httpServer, {
   cors: {

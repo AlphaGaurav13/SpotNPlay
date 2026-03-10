@@ -67,33 +67,39 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setLocationError('Location not supported');
-      setLocationLoading(false);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        try {
-          const [playersRes, groundsRes] = await Promise.all([
-            API.get(`/players/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
-            API.get(`/grounds/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
-          ]);
-          setNearbyPlayers(playersRes.data || []);
-          setNearbyGrounds(groundsRes.data || []);
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setLocationLoading(false);
-        }
-      },
-      () => {
-        setLocationError('Allow location to see nearby players');
+  if (!user) {
+    setLocationLoading(false);
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    setLocationError('Location not supported');
+    setLocationLoading(false);
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      try {
+        const [playersRes, groundsRes] = await Promise.all([
+          API.get(`/players/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
+          API.get(`/grounds/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
+        ]);
+        setNearbyPlayers(playersRes.data || []);
+        setNearbyGrounds(groundsRes.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLocationLoading(false);
       }
-    );
-  }, []);
+    },
+    () => {
+      setLocationError('Allow location to see nearby players');
+      setLocationLoading(false);
+    }
+  );
+}, [user]);
 
   useEffect(() => {
     const style = document.createElement('style');
