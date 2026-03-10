@@ -301,15 +301,15 @@ const PlayerDashboard = () => {
   };
 
   const handleGoOffline = async () => {
-    try {
-      await API.patch('/players/offline');
-      showMessage('You are now offline');
-      setAvailability(null);
-      fetchAll();
-    } catch {
-      showMessage('Failed', 'error');
-    }
-  };
+  try {
+    await API.patch('/players/offline');
+    showMessage('You are now offline');
+    setAvailability(null);
+    // fetchAll() ← YE HATAO
+  } catch {
+    showMessage('Failed', 'error');
+  }
+};
 
   const getStatusBadge = (status) => {
     const map = {
