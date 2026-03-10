@@ -3,10 +3,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',  // ← IPv4 force karo
-  port: 587,
-  secure: false,
-  family: 4,               // ← IPv4 only
+  host: 'smtp.gmail.com',
+  port: 465,        // ← 465 SSL
+  secure: true,     // ← true for 465
+  family: 4,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
