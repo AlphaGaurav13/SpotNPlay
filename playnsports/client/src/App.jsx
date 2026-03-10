@@ -11,7 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import GroupPage from './pages/GroupPage';
 import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './routes/ProtectedRoute';
-
+import GoogleSuccess from './pages/GoogleSuccess';
 function App() {
   return (
     <Routes>
@@ -25,6 +25,7 @@ function App() {
       <Route path="/owner/dashboard" element={<ProtectedRoute role="ground_owner"><GroundOwnerDashboard /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/groups" element={<ProtectedRoute><GroupPage /></ProtectedRoute>} />
+      <Route path="/auth/google/success" element={<GoogleSuccess />} />
       <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
       <Route path="/chat/:conversationId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
     </Routes>

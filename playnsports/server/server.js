@@ -14,7 +14,7 @@ import otpRoutes from './routes/otpRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import { socketHandler } from './socket/socketHandler.js';
-
+import passport from './config/passport.js';
 dotenv.config();
 connectDB();
 
@@ -51,7 +51,7 @@ socketHandler(io);
 app.get('/', (req, res) => {
   res.json({ message: 'PLAYNSPORTS API running 🚀' });
 });
-
+app.use(passport.initialize());
 app.use('/api/auth', authRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/grounds', groundRoutes);
