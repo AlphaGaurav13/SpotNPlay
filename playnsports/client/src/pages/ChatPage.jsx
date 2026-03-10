@@ -93,7 +93,7 @@ const ChatPage = () => {
   color: black;
   border-radius: 18px 18px 4px 18px;
   padding: 10px 14px;
-  max-width: 70%;
+  max-width: 80%;
   font-size: 14px;
   font-weight: 500;
   word-break: break-word;
@@ -108,7 +108,7 @@ const ChatPage = () => {
   color: white;
   border-radius: 18px 18px 18px 4px;
   padding: 10px 14px;
-  max-width: 70%;
+  max-width: 80%;
   font-size: 14px;
   word-break: break-word;
   white-space: pre-wrap;       
