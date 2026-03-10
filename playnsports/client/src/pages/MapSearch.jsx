@@ -476,36 +476,7 @@ const MapSearch = () => {
                             </div>
                             {player.bio && <p style={{ color: '#6b7280', fontSize: '11px', margin: '4px 0' }}>{player.bio}</p>}
                             <p style={{ color: '#9ca3af', fontSize: '12px' }}>📞 {player.user?.phone}</p>
-                            <p style={{ color: '#9ca3af', fontSize: '12px' }}>📞 {player.user?.phone}</p>
-
-{/* ← YE ADD KARO */}
-{user?._id !== player.user?._id && (
-  <button
-    onClick={async () => {
-      try {
-        const { data } = await API.post('/chat/direct', { userId: player.user._id });
-        navigate(`/chat/${data._id}`);
-      } catch (err) {
-        console.error(err);
-        alert('Failed to open chat');
-      }
-    }}
-    style={{
-      marginTop: '8px',
-      width: '100%',
-      background: 'rgba(74,222,128,0.12)',
-      border: '1px solid rgba(74,222,128,0.3)',
-      color: '#4ade80',
-      fontWeight: 600,
-      fontSize: '12px',
-      padding: '7px 10px',
-      borderRadius: '8px',
-      cursor: 'pointer',
-    }}
-  >
-    💬 Send Message
-  </button>
-)}
+                            
                             {user?.role === 'player' && player.user?._id !== user._id && myGroups.length > 0 && (
                               <div style={{ marginTop: '8px' }}>
                                 {myGroups.map((group) => (
