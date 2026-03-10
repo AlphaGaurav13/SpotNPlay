@@ -440,6 +440,7 @@ const Register = () => {
                     </span>
                   ) : useOtp ? 'Continue → (Verify with OTP)' : 'Create Account 🚀'}
                 </button>
+                <br/>
               
       <a href="https://spotnplay-1.onrender.com/api/auth/google"
   style={{ textDecoration: 'none', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)', fontWeight: '500', fontSize: '15px', borderRadius: '14px', padding: '14px' }}
