@@ -29,8 +29,3 @@ const sendOTPEmail = async (email, otp) => {
 };
 
 export default sendOTPEmail;
-```
-
-## Render pe env variable add karo:
-```
-BREVO_SMTP_KEY=xsmtpsib-a627c3b855a199f8370f791821551a67b53ea4ee915c9651c85dd6fd67fd7e9f-vyOSuIusiyzILTxa
