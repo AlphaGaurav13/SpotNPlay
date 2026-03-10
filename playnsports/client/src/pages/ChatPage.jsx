@@ -89,28 +89,32 @@ const ChatPage = () => {
       }
 
       .msg-bubble-mine {
-        background: linear-gradient(135deg, #4ade80, #22c55e);
-        color: black;
-        border-radius: 18px 18px 4px 18px;
-        padding: 10px 14px;
-        max-width: 70%;
-        font-size: 14px;
-        font-weight: 500;
-        word-break: break-word;
-        animation: msgIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
-      }
+          background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: black;
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  max-width: 70%;
+  font-size: 14px;
+  font-weight: 500;
+  word-break: break-word;
+  white-space: pre-wrap;        
+  overflow-wrap: break-word;   
+  line-height: 1.5;             
+}
 
       .msg-bubble-other {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        color: white;
-        border-radius: 18px 18px 18px 4px;
-        padding: 10px 14px;
-        max-width: 70%;
-        font-size: 14px;
-        word-break: break-word;
-        animation: msgIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
-      }
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: white;
+  border-radius: 18px 18px 18px 4px;
+  padding: 10px 14px;
+  max-width: 70%;
+  font-size: 14px;
+  word-break: break-word;
+  white-space: pre-wrap;       
+  overflow-wrap: break-word;    
+  line-height: 1.5;            
+}
 
       .typing-dot {
         width: 6px;
