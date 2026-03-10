@@ -336,7 +336,7 @@ const Register = () => {
               </div>
 
               <div className="animate-fadeUp-3">
-                <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">Full Name</label>
+                <label className="text-xs text-gray-600 uppercase tracking-wider mb-2 block">User Name</label>
                 <input
                   type="text" name="name" value={form.name}
                   onChange={handleChange}
