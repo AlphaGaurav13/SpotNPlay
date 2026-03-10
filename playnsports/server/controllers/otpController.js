@@ -17,7 +17,11 @@ const sendOTP = asyncHandler(async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   await OTP.deleteMany({ email: cleanEmail });
-  await OTP.create({ email: cleanEmail, otp });
+  await OTP.create({
+  email: cleanEmail,
+  otp,
+  expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+  });
   await sendOTPEmail(cleanEmail, otp);
 
   res.json({ message: 'OTP sent ✅' });
