@@ -454,8 +454,8 @@ const PlayerDashboard = () => {
                       <select value={form.sport} onChange={(e) => setForm({ ...form, sport: e.target.value })} className="input-field">
                         <option value="football">⚽ Football</option>
                         <option value="cricket">🏏 Cricket</option>
-                        <option value="Boxing"> Boxing</option>
-                        <option value="basketball">🥊 Basketball</option>
+                        <option value="Boxing">🥊 Boxing</option>
+                        <option value="basketball">🏀 Basketball</option>
                         <option value="tennis">🎾 Tennis</option>
                         <option value="badminton">🏸 Badminton</option>
                         <option value="volleyball">🏐 Volleyball</option>
