@@ -7,7 +7,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+
     <BrowserRouter>
       <AuthProvider>
         <SocketProvider>
@@ -15,5 +15,5 @@ createRoot(document.getElementById('root')).render(
         </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
-  </StrictMode>
+  
 );

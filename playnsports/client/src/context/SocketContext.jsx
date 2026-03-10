@@ -15,10 +15,10 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!user || !token) return;
 
-    socketRef.current = io(SOCKET_URL, {
-        auth: { token },
-        transports: ['websocket'],
-    });
+    socketRef.current = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
+  auth: { token },
+  transports: ['polling', 'websocket'],
+});
 
     const socket = socketRef.current;
 
