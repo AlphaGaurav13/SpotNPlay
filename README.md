@@ -344,6 +344,13 @@ Use these in test mode:
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
 
+Before deploying or running locally, create a `.env` file in the `client` folder or set variables in Vercel:
+```
+VITE_API_URL=https://spotnplay-1.onrender.com/api
+VITE_SOCKET_URL=https://spotnplay-1.onrender.com
+```
+(See `.env.example` for defaults.)
+
 ### Backend — Render.com
 
 | Setting | Value |
@@ -351,9 +358,28 @@ Use these in test mode:
 | Root Directory | `playnsports/server` |
 | Build Command | `npm install` |
 | Start Command | `npm start` |
-| Environment | Add all `.env` variables |
+| Environment | Add all `.env` variables (see example below) |
+A `.env` file for the server should include at least the following keys:
 
-> ⚠️ **Note:** Render free plan has cold starts (~30 sec on first request after inactivity). This is normal.
+```env
+PORT=5000
+MONGODB_URI=your_mongo_connection_string
+JWT_SECRET=long_random_secret
+NODE_ENV=production
+
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+
+EMAIL_USER=your@mail.com
+EMAIL_PASS=app-password-or-service-credentials
+
+RAZORPAY_KEY_ID=...
+RAZORPAY_KEY_SECRET=...
+
+# optional: comma‑separated list of allowed origins for CORS
+ALLOWED_ORIGINS=http://localhost:5173,https://playnsports-app.vercel.app,https://your-front-url.com
+```> ⚠️ **Note:** Render free plan has cold starts (~30 sec on first request after inactivity). This is normal.
 
 ### Live URLs
 - **Frontend:** https://playnsports-app.vercel.app

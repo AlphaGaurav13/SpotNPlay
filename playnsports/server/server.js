@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import playerRoutes from './routes/playerRoutes.js';
@@ -21,10 +22,10 @@ connectDB();
 const app = express();
 const httpServer = createServer(app);
 
-const allowedOrigins = [
-  'https://playnsports-app.vercel.app',
-  'http://localhost:5173',
-];
+// allowlist for CORS; can be overridden with ALLOWED_ORIGINS env var (comma‑separated)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://playnsports-app.vercel.app,http://localhost:5173')
+  .split(',')
+  .map((u) => u.trim());
 
 const io = new Server(httpServer, {
   cors: {
@@ -64,6 +65,15 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/otp', otpRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/chat', chatRoutes);
+
+// when we're in production, serve the React build as static files
+if (process.env.NODE_ENV === 'production') {
+  const __dirname = path.resolve();
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT} 🟢`));

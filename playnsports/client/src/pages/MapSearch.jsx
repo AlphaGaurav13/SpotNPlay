@@ -531,18 +531,10 @@ const MapSearch = () => {
   <button
     onClick={async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/chat/direct', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ userId: player.user._id }),
-        });
-        const data = await res.json();
+        const { data } = await API.post('/chat/direct', { userId: player.user._id });
         navigate(`/chat/${data._id}`);
-      } catch {
-        console.log();
+      } catch (err) {
+        console.error(err);
       }
     }}
     className="invite-btn w-full mt-1"
@@ -672,17 +664,11 @@ const MapSearch = () => {
   <button
     onClick={async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/chat/direct', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ userId: player.user._id }),
-        });
-        const data = await res.json();
+        const { data } = await API.post('/chat/direct', { userId: player.user._id });
         navigate(`/chat/${data._id}`);
-      } catch {}
+      } catch (err) {
+        console.error(err);
+      }
     }}
     className="invite-btn w-full mt-1"
     style={{ color: '#4ade80', marginTop: '6px' }}
