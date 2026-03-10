@@ -83,8 +83,8 @@ const Home = () => {
       const { latitude, longitude } = pos.coords;
       try {
         const [playersRes, groundsRes] = await Promise.all([
-          API.get(`/players/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
-          API.get(`/grounds/nearby?lat=${latitude}&lng=${longitude}&radius=5000`),
+        API.get(`/players/nearby?latitude=${latitude}&longitude=${longitude}&radius=5000`),
+        API.get(`/grounds/nearby?latitude=${latitude}&longitude=${longitude}&radius=5000`),
         ]);
         setNearbyPlayers(playersRes.data || []);
         setNearbyGrounds(groundsRes.data || []);
