@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import path from 'path';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import playerRoutes from './routes/playerRoutes.js';
@@ -22,37 +21,32 @@ connectDB();
 const app = express();
 const httpServer = createServer(app);
 
-// allowlist for CORS; can be overridden with ALLOWED_ORIGINS env var (comma‑separated)
-const allowedOrigins = [
-  'https://playnsports-app.vercel.app',
-  'https://playnsports-28d3yaxnw-gauravs-projects-4cd46d11.vercel.app',
-  'http://localhost:5173',
-];
+const corsOrigin = (origin, callback) => {
+  if (!origin || origin.endsWith('.vercel.app') || origin === 'http://localhost:5173') {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+};
+
+app.use(cors({
+  origin: corsOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+}));
+
+app.use(express.json());
 
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: corsOrigin,
+    methods: ['GET', 'POST'],
     credentials: true,
   },
   transports: ['websocket', 'polling'],
 });
 
 socketHandler(io);
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-}));
-
-app.use(express.json());
 
 app.get('/', (req, res) => {
   res.json({ message: 'PLAYNSPORTS API running 🚀' });
@@ -67,15 +61,6 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/otp', otpRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/chat', chatRoutes);
-
-// when we're in production, serve the React build as static files
-if (process.env.NODE_ENV === 'production') {
-  const __dirname = path.resolve();
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
-  });
-}
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT} 🟢`));
