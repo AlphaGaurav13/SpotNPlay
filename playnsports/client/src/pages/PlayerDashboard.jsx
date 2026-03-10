@@ -323,7 +323,7 @@ const PlayerDashboard = () => {
   };
 
   const getSportEmoji = (sport) => {
-    const map = { football: '⚽', cricket: '🏏', basketball: '🏀', tennis: '🎾', badminton: '🏸', volleyball: '🏐' };
+    const map = { football: '⚽', cricket: '🏏', basketball: '🏀', tennis: '🎾', badminton: '🏸', volleyball: '🏐', boxing: '🥊' };
     return map[sport] || '🏆';
   };
 
