@@ -1,12 +1,10 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 465,
-  secure: true,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.BREVO_SMTP_KEY,
+    pass: process.env.EMAIL_PASS, // Gmail App Password
   },
 });
 
@@ -15,8 +13,8 @@ const sendOTPEmail = async (email, otp) => {
     await transporter.sendMail({
       from: `"PLAYNSPORTS" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Your PLAYNSPORTS OTP',
-      html: `OTP: ${otp}`,
+      subject: "Your PLAYNSPORTS OTP",
+      html: `<h2>Your OTP is ${otp}</h2>`,
     });
 
     console.log("OTP email sent ✅");
