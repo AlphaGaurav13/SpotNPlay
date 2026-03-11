@@ -15,55 +15,16 @@ const Navbar = () => {
       @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
       .font-bebas { font-family: 'Bebas Neue', cursive; }
       .font-dm { font-family: 'DM Sans', sans-serif; }
-
-      @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @keyframes menuSlide {
-        from { opacity: 0; transform: translateY(-20px) scaleY(0.95); }
-        to { opacity: 1; transform: translateY(0) scaleY(1); }
-      }
+      @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes menuSlide { from { opacity: 0; transform: translateY(-20px) scaleY(0.95); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
       .nav-animate { animation: slideDown 0.4s ease forwards; }
       .menu-animate { animation: menuSlide 0.25s ease forwards; transform-origin: top; }
-      
-      .nav-link-active::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: #4ade80;
-        border-radius: 2px;
-      }
-
-      .avatar-glow:hover {
-        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.4);
-      }
-
-      .hamburger span {
-        display: block;
-        width: 22px;
-        height: 2px;
-        background: white;
-        border-radius: 2px;
-        transition: all 0.3s ease;
-      }
-      .hamburger.open span:nth-child(1) {
-        transform: translateY(6px) rotate(45deg);
-      }
-      .hamburger.open span:nth-child(2) {
-        opacity: 0;
-        transform: scaleX(0);
-      }
-      .hamburger.open span:nth-child(3) {
-        transform: translateY(-6px) rotate(-45deg);
-      }
+      .nav-link-active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: #4ade80; border-radius: 2px; }
+      .avatar-glow:hover { box-shadow: 0 0 0 3px rgba(74,222,128,0.4); }
+      .hamburger span { display: block; width: 22px; height: 2px; background: white; border-radius: 2px; transition: all 0.3s ease; }
+      .hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+      .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+      .hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -75,73 +36,62 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname]);
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
+  const handleLogout = () => { logout(); navigate('/login'); };
   const isActive = (path) => location.pathname === path;
 
   const NavLink = ({ to, children }) => (
-    <Link
-      to={to}
-      className={`relative text-sm font-medium transition-colors duration-200 ${
-        isActive(to) ? 'text-green-400 nav-link-active' : 'text-gray-400 hover:text-white'
-      }`}
-    >
+    <Link to={to} className={`relative text-sm font-medium transition-colors duration-200 ${isActive(to) ? 'text-green-400 nav-link-active' : 'text-gray-400 hover:text-white'}`}>
       {children}
     </Link>
   );
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 font-dm nav-animate transition-all duration-300 ${
-          scrolled
-            ? 'bg-black/90 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/50'
-            : 'bg-transparent'
-        }`}
-      >
+      <nav className={`fixed top-0 left-0 right-0 z-50 font-dm nav-animate transition-all duration-300 ${scrolled ? 'bg-black/90 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/50' : 'bg-transparent'}`}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-green-400 rounded-lg flex items-center justify-center group-hover:bg-green-300 transition-colors duration-200">
               <span className="text-black text-sm font-black">S</span>
             </div>
-            <span className=" text-xl tracking-widest text-white group-hover:text-green-400 transition-colors duration-200">
-              spotNplay
-            </span>
+            <span className="text-xl tracking-widest text-white group-hover:text-green-400 transition-colors duration-200">spotNplay</span>
           </Link>
 
+          {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-8">
             {user && (
               <>
                 <NavLink to="/map">Map</NavLink>
                 <NavLink to="/groups">Groups</NavLink>
+                <NavLink to="/coaches">Coaches</NavLink>
                 <NavLink to="/chat">Chat</NavLink>
                 {user.role === 'player' && <NavLink to="/player/dashboard">Dashboard</NavLink>}
+                {user.role === 'coach' && <NavLink to="/coach/dashboard">Dashboard</NavLink>}
                 {user.role === 'ground_owner' && <NavLink to="/owner/dashboard">Dashboard</NavLink>}
+                {user.role === 'admin' && (
+                  <NavLink to="/admin">
+                    <span className="flex items-center gap-1">
+                      🛡️ Admin
+                    </span>
+                  </NavLink>
+                )}
               </>
             )}
+            {/* Coaches visible to non-logged in users too */}
+            {!user && <NavLink to="/coaches">Coaches</NavLink>}
           </div>
 
+          {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-3 group"
-                >
+                <Link to="/profile" className="flex items-center gap-3 group">
                   <div className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/30 rounded-2xl px-3 py-2 transition-all duration-200">
                     {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="avatar"
-                        className="w-7 h-7 rounded-full object-cover border border-green-400/50 avatar-glow transition-all duration-200"
-                      />
+                      <img src={user.avatar} alt="avatar" className="w-7 h-7 rounded-full object-cover border border-green-400/50 avatar-glow transition-all duration-200" />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center text-xs text-green-400 font-bold">
                         {user.name?.charAt(0).toUpperCase()}
@@ -150,43 +100,26 @@ const Navbar = () => {
                     <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{user.name}</span>
                   </div>
                 </Link>
-
-                <button
-                  onClick={handleLogout}
-                  className="text-sm text-gray-500 hover:text-red-400 border border-white/10 hover:border-red-500/30 px-4 py-2 rounded-xl transition-all duration-200"
-                >
+                <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-red-400 border border-white/10 hover:border-red-500/30 px-4 py-2 rounded-xl transition-all duration-200">
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="text-sm text-gray-400 hover:text-white transition-colors duration-200"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="text-sm bg-green-400 hover:bg-green-300 text-black font-semibold px-5 py-2 rounded-xl transition-all duration-200"
-                >
-                  Get Started
-                </Link>
+                <Link to="/login" className="text-sm text-gray-400 hover:text-white transition-colors duration-200">Login</Link>
+                <Link to="/register" className="text-sm bg-green-400 hover:bg-green-300 text-black font-semibold px-5 py-2 rounded-xl transition-all duration-200">Get Started</Link>
               </>
             )}
           </div>
 
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className={`md:hidden hamburger ${menuOpen ? 'open' : ''} flex flex-col gap-[5px] p-2`}
-          >
-            <span />
-            <span />
-            <span />
+          {/* Hamburger */}
+          <button onClick={() => setMenuOpen(!menuOpen)} className={`md:hidden hamburger ${menuOpen ? 'open' : ''} flex flex-col gap-[5px] p-2`}>
+            <span /><span /><span />
           </button>
         </div>
       </nav>
 
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="fixed top-[65px] left-0 right-0 z-40 md:hidden menu-animate">
           <div className="mx-4 bg-[#111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
@@ -199,16 +132,20 @@ const Navbar = () => {
                   <Link to="/groups" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
                     <span>👥</span> Groups
                   </Link>
-
-                  <Link to="/groups" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
-                    <span>👥</span> Groups
+                  <Link to="/coaches" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
+                    <span>🏋️</span> Coaches
                   </Link>
                   <Link to="/chat" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
-                  <span>💬</span> Chat
-                  </Link>  {/* ← ADD */}
+                    <span>💬</span> Chat
+                  </Link>
                   {user.role === 'player' && (
                     <Link to="/player/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
                       <span>⚡</span> Dashboard
+                    </Link>
+                  )}
+                  {user.role === 'coach' && (
+                    <Link to="/coach/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
+                      <span>🏋️</span> Dashboard
                     </Link>
                   )}
                   {user.role === 'ground_owner' && (
@@ -216,19 +153,24 @@ const Navbar = () => {
                       <span>🏟️</span> Dashboard
                     </Link>
                   )}
+                  {user.role === 'admin' && (
+                    <Link to="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-green-400 hover:text-green-300 transition-all">
+                      <span>🛡️</span> Admin Panel
+                    </Link>
+                  )}
                   <Link to="/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
                     <span>👤</span> Profile
                   </Link>
                   <div className="h-px bg-white/5 my-2" />
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-all text-left"
-                  >
+                  <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-all text-left">
                     <span>🚪</span> Logout
                   </button>
                 </>
               ) : (
                 <>
+                  <Link to="/coaches" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
+                    <span>🏋️</span> Coaches
+                  </Link>
                   <Link to="/login" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-all">
                     <span>🔑</span> Login
                   </Link>
