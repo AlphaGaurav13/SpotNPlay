@@ -12,6 +12,10 @@ import GroupPage from './pages/GroupPage';
 import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import GoogleSuccess from './pages/GoogleSuccess';
+import CoachDashboard from './pages/CoachDashboard';
+import CoachesPage from './pages/CoachesPage';
+import CoachProfile from './pages/CoachProfile';
+import AdminPanel from './pages/AdminPanel';
 function App() {
   return (
     <Routes>
@@ -28,6 +32,10 @@ function App() {
       <Route path="/auth/google/success" element={<GoogleSuccess />} />
       <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
       <Route path="/chat/:conversationId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+      <Route path="/coach/dashboard" element={<CoachDashboard />} />
+      <Route path="/coaches" element={<CoachesPage />} />
+      <Route path="/coaches/:id" element={<CoachProfile />} />
+      <Route path="/admin" element={<AdminPanel />} />
     </Routes>
   );
 }

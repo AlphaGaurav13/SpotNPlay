@@ -15,6 +15,8 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import { socketHandler } from './socket/socketHandler.js';
 import passport from './config/passport.js';
+import coachRoutes from './routes/coachRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -54,7 +56,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'PLAYNSPORTS API running 🚀' });
 });
 
+app.get('/api', (req, res) => {
+  res.json({ message: 'API is working 🚀' });
+});
+
 app.use('/api/auth', authRoutes);
+app.use('/api/coaches', coachRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/grounds', groundRoutes);
 app.use('/api/bookings', bookingRoutes);
