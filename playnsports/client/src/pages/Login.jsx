@@ -174,26 +174,32 @@ const Login = () => {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const { data } = await API.post('/auth/login', form);
-      login({
-        _id: data._id,
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        phone: data.phone,
-        avatar: data.avatar || '',
-      }, data.token);
-      navigate('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  try {
+    const { data } = await API.post('/auth/login', form);
+    login({
+      _id: data._id,
+      name: data.name,
+      email: data.email,
+      role: data.role,
+      phone: data.phone,
+      avatar: data.avatar || '',
+    }, data.token);
+
+    // ← Sirf ye block replace karo
+    if (data.role === 'admin') navigate('/admin');
+    else if (data.role === 'coach') navigate('/coach/dashboard');
+    else if (data.role === 'player') navigate('/player/dashboard');
+    else navigate('/');
+
+  } catch (err) {
+    setError(err.response?.data?.message || 'Login failed');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#060606] text-white flex items-center justify-center px-4 relative overflow-hidden">
