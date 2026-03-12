@@ -71,16 +71,9 @@ const Navbar = () => {
                 {user.role === 'player' && <NavLink to="/player/dashboard">Dashboard</NavLink>}
                 {user.role === 'coach' && <NavLink to="/coach/dashboard">Dashboard</NavLink>}
                 {user.role === 'ground_owner' && <NavLink to="/owner/dashboard">Dashboard</NavLink>}
-                {user.role === 'admin' && (
-                  <NavLink to="/admin">
-                    <span className="flex items-center gap-1">
-                      🛡️ Admin
-                    </span>
-                  </NavLink>
-                )}
+                {user.role === 'admin' && <NavLink to="/admin">🛡️ Admin</NavLink>}
               </>
             )}
-            {/* Coaches visible to non-logged in users too */}
             {!user && <NavLink to="/coaches">Coaches</NavLink>}
           </div>
 
