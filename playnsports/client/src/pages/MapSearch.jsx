@@ -380,7 +380,7 @@ const MapSearch = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-600 uppercase tracking-wider">Radius</label>
+              <label className="text-xs text-gray-600 uppercase tracking-wider">Bar</label>
               <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="select-field">
                 <option value={2000}>📍 2 km</option>
                 <option value={5000}>📍 5 km</option>
